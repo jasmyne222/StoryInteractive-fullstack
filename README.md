@@ -1,4 +1,4 @@
-### Laravel + Vue Fullstack boilerplate
+# Laravel + Vue Fullstack boilerplate
 
 This is a fullstack boilerplate for Laravel and Vue.js fir the course WebMobUi, Media Engineering, HEIG-VD
 
@@ -11,14 +11,14 @@ mkdir YourAppName
 cd YourAppName
 ```
 
-2. Clone the repository and chage the upstream to your oww repository (create it on GitHub first)
+### 2. Clone the repository and chage the upstream to your oww repository (create it on GitHub first)
 
 ```bash
 git clone https://github.com/Chabloz/WebMobUI52-fullstack.git .
 git remote set-url origin https://github.com/YourGitHubUsername/YourAppName.git
 ```
 
-# 2. Install the dependencies
+### 3. Install the dependencies
 
 ```bash
 npm install
@@ -26,7 +26,7 @@ npm run build
 composer install
 ```
 
-# 3. Copy the example environment file
+### 4. Copy the example environment file
 
 ```bash
 cp .env.example .env
@@ -34,14 +34,14 @@ cp .env.example .env
 
 And edit the `.env` file to configure the database connection and other settings (if needed, sqlite is used by default).
 
-# 4. Generate the application key and run the migrations
+### 5. Generate the application key and run the migrations
 
 ```bash
 php artisan key:generate
 php artisan migrate
 ```
 
-# 5. Run the application
+### 6. Run the application
 
 ```bash
 composer run dev
