@@ -1,28 +1,20 @@
 <script setup>
-import { ref, watchEffect } from 'vue';
-import { useFetchJson } from '@/composables/useFetchJson';
+  import { useFetchJson } from '@/composables/useFetchJson';
 
-const { data: test } = useFetchJson('test');
-const { data: delTest, error: delError} = useFetchJson({url: 'test', method: 'DELETE' });
+  const { data: test } = useFetchJson('test');
+  const { data: delTest, error: delError} = useFetchJson({url: 'test', method: 'DELETE' });
 
-const time = ref(null);
-const timeLoading = ref(false);
-const timeError = ref(null);
-let timeAbort = null;
+  const {
+    data: time,
+    error: timeError,
+    loading: timeLoading,
+    execute: executeTimeFetch,
+    abort: abortTimeFetch
+  } = useFetchJson({url: 'time', immediate: false});
 
-function timeFetch() {
-  const { data, error, loading, abort } = useFetchJson({
-    url: 'time',
-    data: { timeClient: new Date() },
-  });
-  timeAbort = abort;
-  watchEffect(() => {
-    timeError.value = error.value;
-    time.value = data.value;
-    timeLoading.value = loading.value;
-  });
-}
-
+  function timeFetch() {
+    executeTimeFetch({timeClient: new Date()});
+  }
 </script>
 
 <template>
@@ -31,11 +23,10 @@ function timeFetch() {
     <p>{{ test }}</p>
     <p>{{ delTest }}</p>
     <p>{{ delError }}</p>
-
-    <button @click="timeFetch" :disabled="timeLoading">
+    <button @click="timeFetch()" :disabled="timeLoading">
       Fetch time
     </button>
-    <button @click="timeAbort" :disabled="!timeLoading">
+    <button @click="abortTimeFetch()" :disabled="!timeLoading">
       Abort
     </button>
     <p v-if="timeLoading">Loading...</p>
