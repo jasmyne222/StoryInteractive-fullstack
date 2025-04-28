@@ -6,11 +6,6 @@ Route::get('/', function () {
   return view('test');
 });
 
-Route::prefix('api/v1/')->group(function () {
-  Route::get('/test', function () {
-    return response()->json(['message' => 'Hello, World from api!']);
-  });
-  Route::delete('/test', function () {
-    return response()->json(['message' => 'Deleting']);
-  });
-});
+// Instead of using Sanctum (or something similar) for authentication,
+// we are using the built-in Laravel session authentication system.
+require_once __DIR__ . '/api.php';
