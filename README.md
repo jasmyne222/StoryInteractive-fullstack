@@ -1,6 +1,8 @@
 # Laravel + Vue Fullstack boilerplate
 
-This is a fullstack boilerplate for Laravel and Vue.js fir the course WebMobUi, Media Engineering, HEIG-VD
+## WebMobUi - Media Engineering - HEIG-VD
+
+This is a fullstack Laravel and Vue.js boilerplate for the course
 
 ### Installation
 
