@@ -1,21 +1,24 @@
-<script setup>
-  import { ref } from 'vue';
-  import TheHeader from '@/components/TheHeader.vue';
-  import Home from '@/pages/Home.vue';
-  // import ChapterView from '@/pages/ChapterView.vue'
-
-  const n = ref(1);
-</script>
-
 <template>
   <div>
     <TheHeader />
     <main>
-      <Home />
+      <Home v-if="currentView === 'home'" @start="startStory" />
+      <ChapterView v-else-if="currentView === 'chapter'" :chapterId="chapterId" />
     </main>
   </div>
 </template>
 
-<style scoped>
+<script setup>
+import { ref } from 'vue'
+import Home from '@/pages/Home.vue'
+import ChapterView from '@/pages/ChapterView.vue'
+import TheHeader from '@/components/TheHeader.vue'
 
-</style>
+const currentView = ref('home')
+const chapterId = ref(null)
+
+function startStory(id) {
+  chapterId.value = id
+  currentView.value = 'chapter'
+}
+</script>
