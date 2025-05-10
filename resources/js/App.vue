@@ -2,6 +2,8 @@
   import { ref } from 'vue';
   import TheHeader from '@/components/TheHeader.vue';
   import Home from '@/pages/Home.vue';
+  // import ChapterView from '@/pages/ChapterView.vue'
+
   const n = ref(1);
 </script>
 

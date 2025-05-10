@@ -3,10 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\StoryController;
 use App\Http\Controllers\Api\ChapterController;
-
+use App\Http\Controllers\Api\ChoiceController;
 
 Route::get('/stories', [StoryController::class, 'index']);
 Route::get('/chapters/{id}', [ChapterController::class, 'show']);
+Route::post('/choices', [ChoiceController::class, 'store']);
+Route::get('/stories/{id}/first-chapter', [ChapterController::class, 'firstChapter']);
 
 
 
