@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 const props = defineProps({
-    chapterId: {
-        type: Number,
+    storyId: {
+        type: [Number, String], // Accepte aussi les strings pour la conversion
         required: true
     }
 })
@@ -15,97 +15,111 @@ const loading = ref(true)
 const error = ref(null)
 
 onMounted(async () => {
+    console.log('ChapterView mounted with storyId:', props.storyId)
     await loadFirstChapter()
 })
 
 async function loadFirstChapter() {
     try {
         loading.value = true
-        const response = await fetch(`/api/stories/${props.chapterId}/first-chapter`)
-        if (!response.ok) throw new Error('Failed to load chapter')
-        
-        const data = await response.json()
-        chapter.value = data
-        choices.value = data.choices
-    } catch (err) {
-        error.value = err.message
-        console.error('Error:', err)
-    } finally {
-        loading.value = false
-    }
-}
+        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`)
+        console.log('API Response:', response) // Debug log
 
-async function loadChapter(chapterId) {
-    try {
-        loading.value = true
-        const response = await fetch(`/api/chapters/${chapterId}`)
-        if (!response.ok) throw new Error('Failed to load chapter')
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
         
-        const data = await response.json()
-        chapter.value = data
-        choices.value = data.choices
+        const result = await response.json()
+        console.log('Parsed result:', result) // Debug log
+        
+        if (result.success && result.data) {
+            chapter.value = result.data
+            choices.value = result.data.choices || []
+            console.log('Chapter loaded:', chapter.value) // Debug log
+        } else {
+            throw new Error(result.message || 'Invalid chapter data')
+        }
     } catch (err) {
+        console.error('Load chapter error:', err) // Plus détaillé
         error.value = err.message
-        console.error('Error:', err)
     } finally {
         loading.value = false
     }
 }
 
 async function makeChoice(choice) {
-  try {
-    const response = await fetch('/api/choices', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({ choice_id: choice.id })
-    })
-    
-    if (!response.ok) throw new Error('Failed to process choice')
-    
-    // Au lieu d'utiliser find, chargeons directement le prochain chapitre
-    if (choice.next_chapter_id) {
-      await loadChapter(choice.next_chapter_id)
-    } else {
-      emit('return-to-dashboard')
+    if (!choice.next_chapter_id) {
+        emit('return-to-dashboard')
+        return
     }
-  } catch (err) {
-    error.value = err.message
-    console.error('Error:', err)
-  }
+
+    try {
+        loading.value = true
+        const response = await fetch(`/api/chapters/${choice.next_chapter_id}`)
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        console.log('Next chapter data:', result) // Debug log
+        
+        if (result.success && result.data) {
+            chapter.value = result.data
+            choices.value = result.data.choices || []
+        } else {
+            throw new Error('Failed to load next chapter data')
+        }
+    } catch (err) {
+        console.error('Choice error:', err) // Plus détaillé
+        error.value = err.message
+    } finally {
+        loading.value = false
+    }
 }
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto space-y-8">
-    <button @click="$emit('return-to-dashboard')"
-            class="flex items-center text-romance-600 hover:text-romance-700 transition-colors">
-      <span class="mr-2">←</span> Return to Scenarios
-    </button>
-    
-    <div class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-      <h2 class="text-2xl font-bold text-romance-800">
-        {{ chapter?.title }}
-      </h2>
-      
-      <p class="text-gray-700 leading-relaxed text-lg">
-        {{ chapter?.content }}
-      </p>
-      
-      <div class="space-y-4 mt-8">
-        <button v-for="choice in choices" 
-                :key="choice.id"
-                @click="makeChoice(choice)"
-                class="w-full p-4 text-left rounded-lg border-2 border-romance-200 
-                       hover:border-romance-400 hover:bg-romance-50 transition-all
-                       focus:outline-none focus:ring-2 focus:ring-romance-500">
-          {{ choice.text }}
+    <div class="max-w-3xl mx-auto space-y-8">
+        <!-- Return button -->
+        <button @click="$emit('return-to-dashboard')"
+                class="flex items-center text-dating-primary hover:text-dating-primary/80 transition-colors">
+            <span class="mr-2">←</span> Return to Stories
         </button>
-      </div>
+
+        <!-- Loading state -->
+        <div v-if="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-dating-primary border-t-transparent mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading chapter...</p>
+        </div>
+
+        <!-- Error state -->
+        <div v-else-if="error" class="text-center py-12">
+            <p class="text-red-500">{{ error }}</p>
+            <button @click="loadFirstChapter"
+                    class="mt-4 px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
+                Try Again
+            </button>
+        </div>
+
+        <!-- Chapter content -->
+        <div v-else-if="chapter" class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+            <p class="text-gray-700 leading-relaxed text-lg">
+                {{ chapter.content }}
+            </p>
+
+            <div v-if="choices.length" class="space-y-4 mt-8">
+                <button v-for="choice in choices"
+                        :key="choice.id"
+                        @click="makeChoice(choice)"
+                        class="w-full p-4 text-left rounded-lg border-2 border-dating-primary/20 
+                               hover:border-dating-primary hover:bg-dating-primary/5 
+                               transition-all duration-200">
+                    {{ choice.text }}
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <style scoped>

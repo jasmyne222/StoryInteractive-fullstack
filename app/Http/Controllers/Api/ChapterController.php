@@ -28,10 +28,35 @@ class ChapterController extends Controller
     /**
      * Affiche un chapitre avec ses choix.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        $chapter = Chapter::with('choices')->findOrFail($id);
-        return response()->json($chapter);
+        try {
+            \Log::info('Loading chapter: ' . $id); // Debug log
+            
+            $chapter = Chapter::with('choices')->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $chapter->id,
+                    'content' => $chapter->content,
+                    'chapter_number' => $chapter->chapter_number,
+                    'choices' => $chapter->choices->map(function($choice) {
+                        return [
+                            'id' => $choice->id,
+                            'text' => $choice->text,
+                            'next_chapter_id' => $choice->next_chapter_id
+                        ];
+                    })
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in show: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading chapter: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -39,16 +64,46 @@ class ChapterController extends Controller
      */
     public function firstChapter($storyId)
     {
-        $chapter = Chapter::where('story_id', $storyId)
-                          ->orderBy('chapter_number')
-                          ->with('choices')
-                          ->first();
+        try {
+            \Log::info('Loading first chapter for story: ' . $storyId);
+            
+            $chapter = Chapter::where('story_id', $storyId)
+                             ->orderBy('chapter_number')
+                             ->with('choices') // Eager load choices
+                             ->first();
 
-        if (!$chapter) {
-            return response()->json(['message' => 'Chapitre de départ non trouvé'], 404);
+            if (!$chapter) {
+                \Log::warning('No chapter found for story: ' . $storyId);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No chapters found for this story'
+                ], 404);
+            }
+
+            \Log::info('Chapter found:', ['id' => $chapter->id]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $chapter->id,
+                    'content' => $chapter->content,
+                    'chapter_number' => $chapter->chapter_number,
+                    'choices' => $chapter->choices->map(function($choice) {
+                        return [
+                            'id' => $choice->id,
+                            'text' => $choice->text,
+                            'next_chapter_id' => $choice->next_chapter_id
+                        ];
+                    })
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in firstChapter: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load chapter'
+            ], 500);
         }
-
-        return response()->json($chapter);
     }
 
     /**

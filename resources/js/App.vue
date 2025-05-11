@@ -42,9 +42,10 @@ onMounted(async () => {
 });
 
 function startDate(storyId) {
+    console.log('Starting date with ID:', storyId) // Debug log
     if (storyId) {
-        currentView.value = "date-simulator";
-        chapterId.value = storyId;
+        currentView.value = "date-simulator"
+        chapterId.value = parseInt(storyId, 10) // Conversion explicite en nombre
     }
 }
 
@@ -102,8 +103,8 @@ function isStoryAvailable(story) {
             </div>
 
             <ChapterView 
-                v-else
-                :chapterId="chapterId"
+                v-if="currentView === 'date-simulator'"
+                :storyId="chapterId"
                 @return-to-dashboard="returnToDashboard"
             />
         </main>

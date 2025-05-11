@@ -3,18 +3,38 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Story;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class StoryController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
-        $stories = Story::all(['id', 'title', 'summary']);
-        return response()->json([
-            'success' => true,
-            'data' => $stories
-        ]);
+        try {
+            $stories = Story::with(['chapters' => function($query) {
+                $query->orderBy('chapter_number')->first();
+            }])->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $stories->map(function($story) {
+                    return [
+                        'id' => $story->id,
+                        'title' => $story->title,
+                        'description' => $story->summary,
+                        'available' => true,
+                        'first_chapter' => $story->chapters->first()
+                    ];
+                })
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error loading stories: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading stories'
+            ], 500);
+        }
     }
 
     /**

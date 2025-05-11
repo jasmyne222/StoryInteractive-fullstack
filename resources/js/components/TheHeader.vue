@@ -65,10 +65,8 @@ function logout() {
           </div>
         </div>
 
-        <!-- User Stats and Profile -->
+        <!-- User Profile -->
         <div class="flex items-center space-x-4">
-          <DateStats v-if="!isLoading" :stats="stats" />
-          
           <div class="relative ml-3">
             <div class="flex items-center space-x-3">
               <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
