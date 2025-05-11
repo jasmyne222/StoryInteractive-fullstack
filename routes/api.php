@@ -5,6 +5,13 @@ use App\Http\Controllers\Api\StoryController;
 use App\Http\Controllers\Api\ChapterController;
 use App\Http\Controllers\Api\ChoiceController;
 
+
+use App\Http\Controllers\Api\ProgressController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/progress', [ProgressController::class, 'show']);
+    Route::post('/progress', [ProgressController::class, 'store']);
+});
 Route::get('/stories', [StoryController::class, 'index']);
 Route::get('/chapters/{id}', [ChapterController::class, 'show']);
 Route::post('/choices', [ChoiceController::class, 'store']);

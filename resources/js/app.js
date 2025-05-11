@@ -1,12 +1,11 @@
 import { createApp } from 'vue';
-import { setDefaultHeaders, setDefaultBaseUrl } from '@/utils/fetchJson.js';
+import { setDefaultHeaders } from '@/utils/fetchJson.js';
 import App from './App.vue';
 
+// Configuration des headers CSRF
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
-
 setDefaultHeaders({'X-CSRF-TOKEN': csrfToken});
-const urlApi = document.querySelector('meta[name="api-base-url"]')?.getAttribute('content') ?? '';
-setDefaultBaseUrl(urlApi);
 
-const myApp = createApp(App);
-myApp.mount('#app');
+// Création de l'application Vue
+const app = createApp(App);
+app.mount('#app');

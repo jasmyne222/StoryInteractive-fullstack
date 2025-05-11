@@ -1,13 +1,141 @@
 <script setup>
+import DateStats from "./DateStats.vue";
 
+const props = defineProps({
+    user: {
+        type: Object,
+        required: true,
+        default: () => ({ name: "Guest" })
+    },
+    stats: {
+        type: Object,
+        required: true,
+        default: () => ({
+            attraction: 65,
+            connection: 50,
+            confidence: 30,
+            chemistry: 45,
+        }),
+    },
+    isLoading: {
+        type: Boolean,
+        default: false
+    }
+});
+
+function logout() {
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute("content");
+
+    fetch("/logout", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+            Accept: "application/json",
+        },
+    })
+        .then(() => {
+            window.location.href = "/login";
+        })
+        .catch((error) => {
+            console.error("Logout error:", error);
+        });
+}
 </script>
 
 <template>
-  <header>
-    <h1>Header</h1>
-  </header>
+    <header class="header">
+        <DateStats :stats="stats" />
+
+        <div class="profile-title">
+            <h1>
+                <span class="welcome-text">Welcome,</span>
+                {{ user.name }}
+            </h1>
+        </div>
+
+        <div class="actions">
+            <button @click="logout" class="logout-btn">
+                Sign Out
+            </button>
+        </div>
+    </header>
 </template>
 
 <style scoped>
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: var(--primary);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+}
 
+.profile-title {
+    flex: 2;
+    text-align: center;
+}
+
+.profile-title h1 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.6rem;
+    color: white;
+}
+
+.welcome-text {
+    font-weight: 400;
+    opacity: 0.9;
+    margin-right: 0.5rem;
+}
+
+.actions {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.logout-btn {
+    padding: 0.6rem 1.2rem;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .profile-title {
+        margin: 0.8rem 0;
+    }
+
+    .profile-title h1 {
+        font-size: 1.2rem;
+    }
+
+    .actions {
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+}
 </style>

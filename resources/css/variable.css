@@ -1,0 +1,36 @@
+:root {
+  /* Palette de couleurs romance */
+  --primary: #ff6b88;
+  --primary-light: #ff8fa6;
+  --primary-dark: #e64d68;
+  --secondary: #845ef7;
+  --accent: #ffd43b;
+  
+  /* Couleurs fonctionnelles */
+  --success: #4cd964;
+  --warning: #ffcc00;
+  --danger: #ff3b30;
+  
+  /* Tons neutres */
+  --bg-light: #fff5f7;
+  --bg-white: #ffffff;
+  --text-dark: #2c3e50;
+  --text-light: #ffffff;
+  --text-muted: #8392a5;
+  
+  /* Ombres */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  
+  /* Bordures */
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 1rem;
+  --border-radius-full: 9999px;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+}
