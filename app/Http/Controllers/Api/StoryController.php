@@ -12,24 +12,30 @@ class StoryController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $stories = Story::with(['chapters' => function($query) {
-                $query->orderBy('chapter_number')->first();
-            }])->get();
+            \Log::info('Attempting to fetch stories');
+            
+            $stories = Story::all();
+            
+            \Log::info('Found ' . $stories->count() . ' stories');
+
+            $formattedStories = $stories->map(function($story) {
+                return [
+                    'id' => $story->id,
+                    'title' => $story->title,
+                    'description' => $story->summary,
+                    'available' => true
+                ];
+            });
+
+            \Log::info('Formatted stories data:', $formattedStories->toArray());
 
             return response()->json([
                 'success' => true,
-                'data' => $stories->map(function($story) {
-                    return [
-                        'id' => $story->id,
-                        'title' => $story->title,
-                        'description' => $story->summary,
-                        'available' => true,
-                        'first_chapter' => $story->chapters->first()
-                    ];
-                })
+                'data' => $formattedStories
             ]);
+
         } catch (\Exception $e) {
-            \Log::error('Error loading stories: ' . $e->getMessage());
+            \Log::error('Error in stories index: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error loading stories'

@@ -10,6 +10,27 @@
                 </p>
             </div>
 
+            <!-- Afficher les erreurs de connexion -->
+            @if ($errors->any())
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">
+                            Ces identifiants ne correspondent à aucun compte. 
+                            <a href="{{ route('register') }}" class="font-medium underline hover:text-red-600">
+                                Créer un compte
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <form class="mt-8 space-y-6" method="POST" action="{{ route('login') }}">
                 @csrf
 
@@ -52,6 +73,15 @@
                     </button>
                 </div>
             </form>
+
+            <div class="text-center text-sm mt-4">
+                <p class="text-gray-600">
+                    Pas encore de compte ?
+                    <a href="{{ route('register') }}" class="font-medium text-dating-primary hover:text-love-600">
+                        S'inscrire
+                    </a>
+                </p>
+            </div>
         </div>
     </div>
 </x-guest-layout>

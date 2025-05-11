@@ -14,30 +14,39 @@ const dateScenarios = ref([]);
 // Load initial data
 onMounted(async () => {
     try {
-        // Load user data
-        const userResponse = await fetch("/api/user");
-        if (userResponse.ok) {
-            user.value = await userResponse.json();
-        }
-
-        // Load stories
-        const storiesResponse = await fetch("/api/stories");
-        if (storiesResponse.ok) {
-            const data = await storiesResponse.json();
-            if (data.success && data.data) {
-                dateScenarios.value = data.data.map(story => ({
-                    id: story.id,
-                    title: story.title,
-                    description: story.summary,
-                    available: true,
-                    imageUrl: `/images/dates/default.jpg` // Image par défaut
-                }));
+        isLoading.value = true
+        console.log('Fetching stories...')
+        
+        const response = await fetch('/api/stories', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
+        })
+        
+        console.log('Response status:', response.status)
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        console.log('Stories data:', result)
+        
+        if (result.success && result.data) {
+            dateScenarios.value = result.data.map(story => ({
+                id: story.id,
+                title: story.title,
+                description: story.description,
+                available: true
+            }))
+        } else {
+            throw new Error('Invalid data format')
         }
     } catch (error) {
-        console.error("Error loading data:", error);
+        console.error('Error loading stories:', error)
     } finally {
-        isLoading.value = false;
+        isLoading.value = false
     }
 });
 

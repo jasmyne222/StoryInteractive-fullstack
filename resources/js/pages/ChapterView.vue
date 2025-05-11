@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const props = defineProps({
     storyId: {
-        type: [Number, String], // Accepte aussi les strings pour la conversion
+        type: [Number, String],
         required: true
     }
 })
@@ -14,65 +14,82 @@ const choices = ref([])
 const loading = ref(true)
 const error = ref(null)
 
-onMounted(async () => {
-    console.log('ChapterView mounted with storyId:', props.storyId)
-    await loadFirstChapter()
+onMounted(() => {
+    console.log('Mounting ChapterView with storyId:', props.storyId)
+    loadFirstChapter()
 })
 
 async function loadFirstChapter() {
     try {
         loading.value = true
-        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`)
-        console.log('API Response:', response) // Debug log
-
+        error.value = null
+        
+        console.log('Fetching first chapter for story:', props.storyId)
+        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        
+        console.log('Response status:', response.status)
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         
         const result = await response.json()
-        console.log('Parsed result:', result) // Debug log
+        console.log('API response:', result)
         
         if (result.success && result.data) {
             chapter.value = result.data
             choices.value = result.data.choices || []
-            console.log('Chapter loaded:', chapter.value) // Debug log
+            console.log('Chapter loaded:', chapter.value)
+            console.log('Choices loaded:', choices.value)
         } else {
-            throw new Error(result.message || 'Invalid chapter data')
+            throw new Error(result.message || 'Invalid response format')
         }
     } catch (err) {
-        console.error('Load chapter error:', err) // Plus détaillé
-        error.value = err.message
+        console.error('Error loading chapter:', err)
+        error.value = `Failed to load chapter: ${err.message}`
     } finally {
         loading.value = false
     }
 }
 
 async function makeChoice(choice) {
-    if (!choice.next_chapter_id) {
-        emit('return-to-dashboard')
-        return
-    }
-
     try {
+        if (!choice.next_chapter_id) {
+            emit('return-to-dashboard')
+            return
+        }
+
         loading.value = true
-        const response = await fetch(`/api/chapters/${choice.next_chapter_id}`)
+        error.value = null
+        
+        const response = await fetch(`/api/chapters/${choice.next_chapter_id}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         
         const result = await response.json()
-        console.log('Next chapter data:', result) // Debug log
+        console.log('Next chapter data:', result)
         
         if (result.success && result.data) {
             chapter.value = result.data
             choices.value = result.data.choices || []
         } else {
-            throw new Error('Failed to load next chapter data')
+            throw new Error('Failed to load next chapter')
         }
     } catch (err) {
-        console.error('Choice error:', err) // Plus détaillé
-        error.value = err.message
+        console.error('Error making choice:', err)
+        error.value = `Failed to proceed: ${err.message}`
     } finally {
         loading.value = false
     }

@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('user_progress', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('story_id')->constrained()->onDelete('cascade');
+            $table->foreignId('chapter_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

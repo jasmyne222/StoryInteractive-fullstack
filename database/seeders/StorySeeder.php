@@ -6,68 +6,195 @@ use Illuminate\Database\Seeder;
 use App\Models\Story;
 use App\Models\Chapter;
 use App\Models\Choice;
+use Illuminate\Support\Facades\Log;
 
 class StorySeeder extends Seeder
 {
     public function run(): void
     {
-        // Créer une histoire
-        $story = Story::create([
-            'title' => 'Réussir un date',
-            'summary' => 'Une soirée pleine de décisions… sauras-tu faire les bons choix ?',
-        ]);
+        try {
+            Log::info('Starting StorySeeder');
 
-        // Créer les chapitres
-        $chapters = [
-            1 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 1,
-                'content' => 'Tu arrives au café. La personne t’attend déjà, souriante.'
-            ]),
-            2 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 2,
-                'content' => 'Tu commandes un café. Silence gênant.'
-            ]),
-            3 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 3,
-                'content' => 'Tu lui dis qu\'elle a un très beau sourire. Elle rougit.'
-            ]),
-            4 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 4,
-                'content' => 'Elle rit à ta blague. Le date se détend.'
-            ]),
-            5 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 5,
-                'content' => 'Elle regarde son téléphone, mal à l’aise.'
-            ]),
-            6 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 6,
-                'content' => 'Vous sortez marcher. Le courant passe bien.'
-            ]),
-            7 => Chapter::create([
-                'story_id' => $story->id,
-                'chapter_number' => 7,
-                'content' => '“Je suis pas encore prêt pour une relation…” dit-elle.'
-            ]),
-        ];
+            // Première histoire : Premier Rendez-vous
+            $story1 = Story::create([
+                'title' => 'Premier Rendez-vous',
+                'summary' => 'Un premier rendez-vous qui pourrait mener à quelque chose de spécial... ou pas ! À toi de faire les bons choix.',
+            ]);
 
-        // Créer les choix
-        Choice::insert([
-            ['chapter_id' => $chapters[1]->id, 'text' => 'Tu commandes un café', 'next_chapter_id' => $chapters[2]->id],
-            ['chapter_id' => $chapters[1]->id, 'text' => 'Tu lui fais un compliment', 'next_chapter_id' => $chapters[3]->id],
+            // Chapitres histoire 1
+            $chapters1 = [
+                'start' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 1,
+                    'content' => 'Tu arrives au café et aperçois ton rendez-vous assis à une table. Il/Elle te fait un signe de la main avec un sourire timide.'
+                ]),
+                
+                // Branches positives
+                'compliment' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 2,
+                    'content' => "Tu t'approches avec confiance et fais un compliment sur sa tenue. Ses yeux s'illuminent et l'atmosphère devient immédiatement plus détendue."
+                ]),
+                'discussion' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 3,
+                    'content' => "La conversation s'engage naturellement. Vous découvrez que vous avez beaucoup de points communs."
+                ]),
+                'promenade' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 4,
+                    'content' => "Tu proposes une promenade dans le parc voisin. Le coucher de soleil crée une atmosphère romantique."
+                ]),
+                
+                // Branches neutres
+                'cafe' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 5,
+                    'content' => "Tu commandes un café et la conversation démarre doucement. L'ambiance est agréable mais sans plus."
+                ]),
+                'smalltalk' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 6,
+                    'content' => "Vous parlez de sujets généraux : la météo, le travail, les loisirs. C'est cordial mais pas passionnant."
+                ]),
 
-            ['chapter_id' => $chapters[2]->id, 'text' => 'Tu brises la glace', 'next_chapter_id' => $chapters[4]->id],
-            ['chapter_id' => $chapters[2]->id, 'text' => 'Tu restes silencieux…', 'next_chapter_id' => $chapters[5]->id],
+                // Branches négatives
+                'phone' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 7,
+                    'content' => "Tu regardes ton téléphone plusieurs fois. Ton rendez-vous semble légèrement agacé."
+                ]),
+                'ex' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 8,
+                    'content' => "Tu mentionnes ton ex dans la conversation. L'ambiance devient soudainement tendue."
+                ]),
 
-            ['chapter_id' => $chapters[3]->id, 'text' => 'Tu proposes une balade', 'next_chapter_id' => $chapters[6]->id],
-            ['chapter_id' => $chapters[3]->id, 'text' => 'Tu parles de ton ex…', 'next_chapter_id' => $chapters[7]->id],
+                // Fins
+                'perfect_end' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 9,
+                    'content' => "FIN PARFAITE : La soirée se termine par un baiser sous les étoiles. Vous programmez déjà un second rendez-vous."
+                ]),
+                'good_end' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 10,
+                    'content' => "BONNE FIN : Le rendez-vous se termine agréablement. Vous échangez vos numéros avec le sourire."
+                ]),
+                'friend_end' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 11,
+                    'content' => "FIN AMICALE : Vous vous entendez bien, mais il n'y a pas d'étincelle romantique. Vous restez amis."
+                ]),
+                'bad_end' => Chapter::create([
+                    'story_id' => $story1->id,
+                    'chapter_number' => 12,
+                    'content' => "MAUVAISE FIN : Le rendez-vous se termine maladroitement. Message non lu sur l'application de dating."
+                ])
+            ];
 
-            ['chapter_id' => $chapters[4]->id, 'text' => 'Tu proposes un dessert', 'next_chapter_id' => $chapters[6]->id],
-        ]);
+            // Choix histoire 1
+            // Premier chapitre
+            Choice::create([
+                'chapter_id' => $chapters1['start']->id,
+                'text' => 'Faire un compliment sur sa tenue',
+                'next_chapter_id' => $chapters1['compliment']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['start']->id,
+                'text' => 'Commander directement un café',
+                'next_chapter_id' => $chapters1['cafe']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['start']->id,
+                'text' => 'Regarder ton téléphone',
+                'next_chapter_id' => $chapters1['phone']->id
+            ]);
+
+            // Branche positive
+            Choice::create([
+                'chapter_id' => $chapters1['compliment']->id,
+                'text' => 'Continuer la conversation sur vos centres d\'intérêt',
+                'next_chapter_id' => $chapters1['discussion']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['compliment']->id,
+                'text' => 'Parler de ton ex pour exemple',
+                'next_chapter_id' => $chapters1['ex']->id
+            ]);
+
+            Choice::create([
+                'chapter_id' => $chapters1['discussion']->id,
+                'text' => 'Proposer une promenade romantique',
+                'next_chapter_id' => $chapters1['promenade']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['discussion']->id,
+                'text' => 'Rester au café',
+                'next_chapter_id' => $chapters1['smalltalk']->id
+            ]);
+
+            Choice::create([
+                'chapter_id' => $chapters1['promenade']->id,
+                'text' => 'Créer un moment romantique',
+                'next_chapter_id' => $chapters1['perfect_end']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['promenade']->id,
+                'text' => 'Rester amical',
+                'next_chapter_id' => $chapters1['good_end']->id
+            ]);
+
+            // Branche neutre
+            Choice::create([
+                'chapter_id' => $chapters1['cafe']->id,
+                'text' => 'Essayer d\'approfondir la conversation',
+                'next_chapter_id' => $chapters1['discussion']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['cafe']->id,
+                'text' => 'Continuer la conversation légère',
+                'next_chapter_id' => $chapters1['smalltalk']->id
+            ]);
+
+            Choice::create([
+                'chapter_id' => $chapters1['smalltalk']->id,
+                'text' => 'Accepter que ça reste amical',
+                'next_chapter_id' => $chapters1['friend_end']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['smalltalk']->id,
+                'text' => 'Regarder discrètement ton téléphone',
+                'next_chapter_id' => $chapters1['phone']->id
+            ]);
+
+            // Branche négative
+            Choice::create([
+                'chapter_id' => $chapters1['phone']->id,
+                'text' => 'Ranger ton téléphone et t\'excuser',
+                'next_chapter_id' => $chapters1['smalltalk']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['phone']->id,
+                'text' => 'Continuer à regarder ton téléphone',
+                'next_chapter_id' => $chapters1['bad_end']->id
+            ]);
+
+            Choice::create([
+                'chapter_id' => $chapters1['ex']->id,
+                'text' => 'Changer rapidement de sujet',
+                'next_chapter_id' => $chapters1['smalltalk']->id
+            ]);
+            Choice::create([
+                'chapter_id' => $chapters1['ex']->id,
+                'text' => 'Continuer à parler de ton ex',
+                'next_chapter_id' => $chapters1['bad_end']->id
+            ]);
+
+            Log::info('StorySeeder completed successfully');
+        } catch (\Exception $e) {
+            Log::error('Error in StorySeeder: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }

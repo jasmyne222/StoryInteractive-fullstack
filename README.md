@@ -1,4 +1,3 @@
-
 # ✨ Laravel + Vue Fullstack Boilerplate ✨
 
 ## 🎓 WebMobUi - Media Engineering - HEIG-VD 🎓
@@ -74,3 +73,34 @@ composer run dev
 ```
 
 🎉 Your application should now be running! 🎉
+
+---
+
+## Installation
+
+1. Clonez le repository
+2. Copiez `.env.example` vers `.env`
+3. Créez la base de données SQLite :
+
+   ```bash
+   touch database/database.sqlite
+   ```
+
+4. Installez les dépendances :
+
+   ```bash
+   composer install
+   npm install
+   ```
+
+5. Générez la clé d'application :
+
+   ```bash
+   php artisan key:generate
+   ```
+
+6. Lancez les migrations et les seeders :
+
+   ```bash
+   php artisan migrate:fresh --seed
+   ```

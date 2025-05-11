@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chapter;
+use App\Models\Story;
+use App\Models\Choice;
 
 class ChapterController extends Controller
 {
@@ -69,7 +71,7 @@ class ChapterController extends Controller
             
             $chapter = Chapter::where('story_id', $storyId)
                              ->orderBy('chapter_number')
-                             ->with('choices') // Eager load choices
+                             ->with('choices') // Eager loading des choix
                              ->first();
 
             if (!$chapter) {
@@ -80,7 +82,7 @@ class ChapterController extends Controller
                 ], 404);
             }
 
-            \Log::info('Chapter found:', ['id' => $chapter->id]);
+            \Log::info('Found chapter: ' . $chapter->id);
 
             return response()->json([
                 'success' => true,
@@ -101,7 +103,7 @@ class ChapterController extends Controller
             \Log::error('Error in firstChapter: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load chapter'
+                'message' => 'Error loading chapter'
             ], 500);
         }
     }

@@ -11,7 +11,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(InteractiveStorySeeder::class);
-        $this->call(StorySeeder::class);
+        $this->call([
+            StorySeeder::class,
+            // InteractiveStorySeeder::class  // Commentez ou supprimez cette ligne si présente
+        ]);
     }
 }
