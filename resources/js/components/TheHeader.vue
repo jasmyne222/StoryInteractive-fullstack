@@ -1,12 +1,8 @@
 <script setup>
 import DateStats from "./DateStats.vue";
+import { ref, onMounted } from 'vue';
 
 const props = defineProps({
-  user: {
-    type: Object,
-    required: true,
-    default: () => ({ name: "Guest" })
-  },
   stats: {
     type: Object,
     required: true,
@@ -49,27 +45,41 @@ function logout() {
             console.error("Logout error:", error);
         });
 }
+
+const user = ref({
+    name: 'Guest'
+});
+
+onMounted(async () => {
+    try {
+        const response = await fetch('/api/user');
+        const userData = await response.json();
+        user.value.name = userData.name || 'Guest';
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+    }
+});
 </script>
 
 <template>
   <header class="bg-white shadow-md">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
-        <div class="flex">
+        <div class="flex-shrink-0 flex items-center">
           <!-- Logo et bouton Home -->
-          <div class="flex-shrink-0 flex items-center">
-            <button @click="goHome" 
-                    class="text-2xl font-display font-bold text-dating-primary hover:text-romance-600 transition-colors">
-              DateSim
-            </button>
-          </div>
+          <button @click="goHome" 
+                  class="text-2xl font-display font-bold text-dating-primary hover:text-romance-600 transition-colors">
+            DateSim
+          </button>
         </div>
 
         <!-- User Profile -->
         <div class="flex items-center space-x-4">
           <div class="relative ml-3">
             <div class="flex items-center space-x-3">
-              <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
+              <span class="text-sm font-medium text-gray-700">
+                {{ user.name }}
+              </span>
               <button @click="logout" 
                       class="px-4 py-2 text-sm font-medium text-white rounded-md bg-dating-primary hover:bg-love-600 transition-colors">
                 Sign Out

@@ -6,7 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserProgress extends Model
 {
-    protected $fillable = ['user_id', 'story_id', 'chapter_id'];
+    protected $fillable = [
+        'user_id',
+        'story_id',
+        'chapter_id',
+        'stats',
+        'choices_made'
+    ];
+
+    protected $casts = [
+        'stats' => 'array',
+        'choices_made' => 'array'
+    ];
 
     public function user()
     {

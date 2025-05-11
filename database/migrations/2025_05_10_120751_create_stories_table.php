@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('summary');
+            $table->boolean('available')->default(true);
+            $table->date('release_date')->nullable();
             $table->timestamps();
         });
     }

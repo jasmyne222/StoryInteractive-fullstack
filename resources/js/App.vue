@@ -37,8 +37,8 @@ onMounted(async () => {
             dateScenarios.value = result.data.map(story => ({
                 id: story.id,
                 title: story.title,
-                description: story.description,
-                available: true
+                description: story.summary,
+                available: story.available
             }))
         } else {
             throw new Error('Invalid data format')
@@ -84,27 +84,64 @@ function isStoryAvailable(story) {
                 </h1>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="scenario in dateScenarios" 
-                         :key="scenario.id"
-                         class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
-                        <div class="aspect-w-16 aspect-h-9 bg-pink-100">
-                            <div class="flex items-center justify-center">
-                                <span class="text-4xl">❤️</span>
-                            </div>
+                    <!-- Histoire disponible -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300">
+                        <div class="h-48 bg-pink-100 relative flex items-center justify-center">
+                            <span class="text-6xl">❤️</span>
                         </div>
-                        
                         <div class="p-6 space-y-4">
                             <h3 class="text-xl font-semibold text-gray-800">
-                                {{ scenario.title }}
+                                Premier Rendez-vous
                             </h3>
                             <p class="text-gray-600">
-                                {{ scenario.description }}
+                                Un premier rendez-vous qui pourrait mener à quelque chose de spécial... ou pas ! À toi de faire les bons choix.
                             </p>
-                            <button 
-                                @click="startDate(scenario.id)"
-                                class="w-full bg-dating-primary text-white py-3 px-6 rounded-lg
-                                       hover:bg-dating-primary/90 transition-colors duration-200">
+                            <button @click="startDate(1)"
+                                    class="w-full py-3 px-6 rounded-lg bg-dating-primary text-white hover:bg-dating-primary/90 transition-colors duration-200">
                                 Start Date
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Histoires à venir -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 opacity-75">
+                        <div class="h-48 bg-pink-100 relative flex items-center justify-center">
+                            <span class="text-6xl">❤️</span>
+                            <div class="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
+                                <span class="text-white text-lg font-semibold">Bientôt disponible</span>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <h3 class="text-xl font-semibold text-gray-800">
+                                Rendez-vous à l'aveugle
+                            </h3>
+                            <p class="text-gray-600">
+                                Un ami commun vous a arrangé un rendez-vous surprise. À venir prochainement !
+                            </p>
+                            <button disabled
+                                    class="w-full py-3 px-6 rounded-lg bg-gray-300 text-gray-500 cursor-not-allowed">
+                                Coming Soon
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 opacity-75">
+                        <div class="h-48 bg-pink-100 relative flex items-center justify-center">
+                            <span class="text-6xl">❤️</span>
+                            <div class="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
+                                <span class="text-white text-lg font-semibold">Bientôt disponible</span>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <h3 class="text-xl font-semibold text-gray-800">
+                                Deuxième Chance
+                            </h3>
+                            <p class="text-gray-600">
+                                Retrouvailles inattendues avec votre premier amour. À venir prochainement !
+                            </p>
+                            <button disabled
+                                    class="w-full py-3 px-6 rounded-lg bg-gray-300 text-gray-500 cursor-not-allowed">
+                                Coming Soon
                             </button>
                         </div>
                     </div>

@@ -191,6 +191,21 @@ class StorySeeder extends Seeder
                 'next_chapter_id' => $chapters1['bad_end']->id
             ]);
 
+            // Ajouter ces histoires après la première histoire
+            $story2 = Story::create([
+                'title' => 'Rendez-vous à l\'aveugle',
+                'summary' => 'Un ami commun vous a arrangé un rendez-vous surprise. À venir prochainement !',
+                'available' => false,
+                'release_date' => '2025-06-01'
+            ]);
+
+            $story3 = Story::create([
+                'title' => 'Deuxième Chance',
+                'summary' => 'Retrouvailles inattendues avec votre premier amour. À venir prochainement !',
+                'available' => false,
+                'release_date' => '2025-07-01'
+            ]);
+
             Log::info('StorySeeder completed successfully');
         } catch (\Exception $e) {
             Log::error('Error in StorySeeder: ' . $e->getMessage());
