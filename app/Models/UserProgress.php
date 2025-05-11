@@ -6,31 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserProgress extends Model
 {
+    protected $table = 'user_progress';
+    
     protected $fillable = [
         'user_id',
         'story_id',
         'chapter_id',
-        'stats',
+        'history',
         'choices_made'
     ];
 
     protected $casts = [
-        'stats' => 'array',
+        'history' => 'array',
         'choices_made' => 'array'
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function story()
-    {
-        return $this->belongsTo(Story::class);
-    }
-
-    public function chapter()
-    {
-        return $this->belongsTo(Chapter::class);
-    }
 }

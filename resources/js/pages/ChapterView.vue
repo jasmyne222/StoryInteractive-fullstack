@@ -13,9 +13,10 @@ const chapter = ref(null)
 const choices = ref([])
 const loading = ref(true)
 const error = ref(null)
+const history = ref([]) // Pour stocker l'historique des chapitres
+const progress = ref(0) // Pour la barre de progression
 
 onMounted(() => {
-    console.log('Mounting ChapterView with storyId:', props.storyId)
     loadFirstChapter()
 })
 
@@ -23,34 +24,17 @@ async function loadFirstChapter() {
     try {
         loading.value = true
         error.value = null
+        history.value = [] // Réinitialiser l'historique
         
-        console.log('Fetching first chapter for story:', props.storyId)
-        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        
-        console.log('Response status:', response.status)
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
+        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`)
         const result = await response.json()
-        console.log('API response:', result)
         
         if (result.success && result.data) {
             chapter.value = result.data
             choices.value = result.data.choices || []
-            console.log('Chapter loaded:', chapter.value)
-            console.log('Choices loaded:', choices.value)
-        } else {
-            throw new Error(result.message || 'Invalid response format')
+            updateProgress()
         }
     } catch (err) {
-        console.error('Error loading chapter:', err)
         error.value = `Failed to load chapter: ${err.message}`
     } finally {
         loading.value = false
@@ -64,62 +48,87 @@ async function makeChoice(choice) {
             return
         }
 
+        // Sauvegarder le chapitre actuel dans l'historique
+        history.value.push({
+            chapter: chapter.value,
+            choices: choices.value
+        })
+
         loading.value = true
         error.value = null
-        
-        const response = await fetch(`/api/chapters/${choice.next_chapter_id}`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
+
+        const response = await fetch(`/api/chapters/${choice.next_chapter_id}`)
         const result = await response.json()
-        console.log('Next chapter data:', result)
         
         if (result.success && result.data) {
             chapter.value = result.data
             choices.value = result.data.choices || []
-        } else {
-            throw new Error('Failed to load next chapter')
+            updateProgress()
         }
     } catch (err) {
-        console.error('Error making choice:', err)
         error.value = `Failed to proceed: ${err.message}`
     } finally {
         loading.value = false
     }
 }
+
+function goBack() {
+    if (history.value.length > 0) {
+        const previousState = history.value.pop()
+        chapter.value = previousState.chapter
+        choices.value = previousState.choices
+        updateProgress()
+    }
+}
+
+function updateProgress() {
+    // Calculer la progression (exemple simple)
+    const totalChapters = 12 // Nombre total de chapitres possibles
+    const currentChapter = chapter.value.chapter_number
+    progress.value = (currentChapter / totalChapters) * 100
+}
 </script>
 
 <template>
     <div class="max-w-3xl mx-auto space-y-8">
-        <!-- Return button -->
-        <button @click="$emit('return-to-dashboard')"
-                class="flex items-center text-dating-primary hover:text-dating-primary/80 transition-colors">
-            <span class="mr-2">←</span> Return to Stories
-        </button>
-
-        <!-- Loading state -->
-        <div v-if="loading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-dating-primary border-t-transparent mx-auto"></div>
-            <p class="mt-4 text-gray-600">Loading chapter...</p>
+        <!-- Barre de progression -->
+        <div class="bg-gray-200 rounded-full h-2.5 mb-4">
+            <div class="bg-dating-primary h-2.5 rounded-full transition-all duration-500"
+                 :style="{ width: `${progress}%` }">
+            </div>
         </div>
 
-        <!-- Error state -->
-        <div v-else-if="error" class="text-center py-12">
-            <p class="text-red-500">{{ error }}</p>
-            <button @click="loadFirstChapter"
-                    class="mt-4 px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
-                Try Again
+        <!-- Boutons de navigation -->
+        <div class="flex justify-between items-center">
+            <button @click="goBack" 
+                    :disabled="history.length === 0"
+                    :class="['px-4 py-2 rounded-lg transition-colors',
+                            history.length === 0 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200']">
+                ← Retour
+            </button>
+            
+            <button @click="$emit('return-to-dashboard')"
+                    class="px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
+                Quitter l'histoire
             </button>
         </div>
 
-        <!-- Chapter content -->
+        <!-- Chapitre et choix -->
+        <div v-if="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-dating-primary border-t-transparent mx-auto"></div>
+            <p class="mt-4 text-gray-600">Chargement...</p>
+        </div>
+
+        <div v-else-if="error" class="text-center py-12">
+            <p class="text-red-500">{{ error }}</p>
+            <button @click="loadFirstChapter" 
+                    class="mt-4 px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
+                Réessayer
+            </button>
+        </div>
+
         <div v-else-if="chapter" class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
             <p class="text-gray-700 leading-relaxed text-lg">
                 {{ chapter.content }}

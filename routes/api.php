@@ -16,9 +16,9 @@ Route::get('/choices/{chapterId}', [ChoiceController::class, 'index']);
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        return response()->json($request->user());
     });
-    Route::post('/choices', [ChoiceController::class, 'store']);
-    Route::get('/progress', [ProgressController::class, 'show']);
+    
     Route::post('/progress', [ProgressController::class, 'store']);
+    Route::get('/progress', [ProgressController::class, 'show']);
 });

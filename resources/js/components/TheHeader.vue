@@ -47,14 +47,25 @@ function logout() {
 }
 
 const user = ref({
-    name: 'Guest'
+    name: ''
 });
 
 onMounted(async () => {
     try {
-        const response = await fetch('/api/user');
+        const response = await fetch('/api/user', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch user data');
+        }
+
         const userData = await response.json();
-        user.value.name = userData.name || 'Guest';
+        user.value = userData;
+        console.log('User data loaded:', userData);
     } catch (error) {
         console.error('Error fetching user data:', error);
     }

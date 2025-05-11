@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('story_id')->constrained()->onDelete('cascade');
             $table->foreignId('chapter_id')->constrained()->onDelete('cascade');
+            $table->json('history')->nullable();
+            $table->json('choices_made')->nullable();
             $table->timestamps();
         });
     }
