@@ -13,7 +13,7 @@ const props = defineProps({
 });
 </script>
 
-<!-- <template>
+<template>
     <div class="date-stats">
         <div class="stat-item">
             <span class="stat-label">Attraction</span>
@@ -40,7 +40,7 @@ const props = defineProps({
             </div>
         </div>
     </div>
-</template> -->
+</template>
 
 <style scoped>
 .date-stats {
@@ -110,17 +110,3 @@ const props = defineProps({
 }
 </style>
 
-<template>
-  <div class="date-stats">
-    <div class="stat-item">
-      <span class="stat-label">Attraction</span>
-      <div class="stat-bar">
-        <div class="stat-fill" 
-             data-stat="attraction"
-             :style="{ width: `${stats.attraction}%` }">
-        </div>
-      </div>
-    </div>
-    <!-- Répétez pour les autres stats -->
-  </div>
-</template>

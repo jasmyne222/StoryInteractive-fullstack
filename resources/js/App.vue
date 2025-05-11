@@ -20,17 +20,19 @@ onMounted(async () => {
             user.value = await userResponse.json();
         }
 
-        // Load stories from API
+        // Load stories
         const storiesResponse = await fetch("/api/stories");
         if (storiesResponse.ok) {
-            const stories = await storiesResponse.json();
-            dateScenarios.value = stories.map(story => ({
-                id: story.id,
-                title: story.title,
-                description: story.summary,
-                available: true, // You can add a field in your database for this
-                imageUrl: `/images/date-${story.id}.jpg` // You'll need to handle images
-            }));
+            const data = await storiesResponse.json();
+            if (data.success && data.data) {
+                dateScenarios.value = data.data.map(story => ({
+                    id: story.id,
+                    title: story.title,
+                    description: story.summary,
+                    available: true,
+                    imageUrl: `/images/dates/default.jpg` // Image par défaut
+                }));
+            }
         }
     } catch (error) {
         console.error("Error loading data:", error);
@@ -50,53 +52,66 @@ function returnToDashboard() {
     currentView.value = "dashboard";
     chapterId.value = null;
 }
+
+// Ajoutez une fonction pour vérifier si une histoire est disponible
+function isStoryAvailable(story) {
+  return story && story.id;
+}
 </script>
 
 <template>
-    <div class="dating-app">
-        <!-- Header -->
-        <TheHeader :user="user" :isLoading="isLoading" />
-
-        <!-- Dashboard view -->
-        <div v-if="currentView === 'dashboard'" class="scenarios-container">
-            <h2>Choose Your Dating Scenario</h2>
-
-            <div class="scenarios-grid">
-                <div
-                    v-for="scenario in dateScenarios"
-                    :key="scenario.id"
-                    class="scenario-card"
-                    :class="{ disabled: !scenario.available }"
-                >
-                    <div class="scenario-image">
-                        <img :src="scenario.imageUrl" :alt="scenario.title">
-                    </div>
-                    <div class="scenario-info">
-                        <h3>{{ scenario.title }}</h3>
-                        <p>{{ scenario.description }}</p>
-                        <button
-                            @click="startDate(scenario.id)"
-                            class="start-btn"
-                            :disabled="!scenario.available"
-                        >
-                            {{ scenario.available ? "Start Date" : "Coming Soon" }}
-                        </button>
+    <div class="min-h-screen bg-gradient-to-b from-pink-50 to-white">
+        <TheHeader 
+            :user="user" 
+            :isLoading="isLoading"
+            @return-to-dashboard="returnToDashboard"
+        />
+        
+        <main class="container mx-auto px-4 py-8">
+            <div v-if="currentView === 'dashboard'" class="space-y-8">
+                <h1 class="text-4xl font-bold text-center text-dating-primary">
+                    Choose Your Dating Adventure
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-for="scenario in dateScenarios" 
+                         :key="scenario.id"
+                         class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+                        <div class="aspect-w-16 aspect-h-9 bg-pink-100">
+                            <div class="flex items-center justify-center">
+                                <span class="text-4xl">❤️</span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 space-y-4">
+                            <h3 class="text-xl font-semibold text-gray-800">
+                                {{ scenario.title }}
+                            </h3>
+                            <p class="text-gray-600">
+                                {{ scenario.description }}
+                            </p>
+                            <button 
+                                @click="startDate(scenario.id)"
+                                class="w-full bg-dating-primary text-white py-3 px-6 rounded-lg
+                                       hover:bg-dating-primary/90 transition-colors duration-200">
+                                Start Date
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Date Simulator view -->
-        <ChapterView 
-            v-else-if="currentView === 'date-simulator'"
-            :chapterId="chapterId"
-            @return-to-dashboard="returnToDashboard"
-        />
+            <ChapterView 
+                v-else
+                :chapterId="chapterId"
+                @return-to-dashboard="returnToDashboard"
+            />
+        </main>
     </div>
 </template>
 
 <style>
-/* Add your existing styles here, but with dating-themed colors */
+Add your existing styles here, but with dating-themed colors
 :root {
     --primary: #ff6b6b;
     --primary-light: #ff8787;

@@ -10,8 +10,11 @@ class StoryController extends Controller
 {
     public function index()
     {
-        return response()->json(Story::all(['id', 'title', 'summary']));
-
+        $stories = Story::all(['id', 'title', 'summary']);
+        return response()->json([
+            'success' => true,
+            'data' => $stories
+        ]);
     }
 
     /**

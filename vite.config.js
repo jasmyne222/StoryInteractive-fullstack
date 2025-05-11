@@ -3,9 +3,15 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
-    plugins: [
-        laravel(['resources/js/app.js']),
-        vue({
+  plugins: [
+    laravel({
+      input: [
+        'resources/css/app.css',  // 👈 ici c’est bien ce fichier
+        'resources/js/app.js',
+      ],
+      refresh: true,
+    }),
+    vue({
             template: {
                 transformAssetUrls: {
                     // The Vue plugin will re-write asset URLs, when referenced

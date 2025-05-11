@@ -4,34 +4,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\StoryController;
 use App\Http\Controllers\Api\ChapterController;
 use App\Http\Controllers\Api\ChoiceController;
-
-
 use App\Http\Controllers\Api\ProgressController;
+use Illuminate\Http\Request;
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/stories', [StoryController::class, 'index']);
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    Route::get('/chapters/{id}', [ChapterController::class, 'show']);
+    Route::get('/stories/{id}/first-chapter', [ChapterController::class, 'firstChapter']);
+    Route::post('/choices', [ChoiceController::class, 'store']);
     Route::get('/progress', [ProgressController::class, 'show']);
     Route::post('/progress', [ProgressController::class, 'store']);
 });
-Route::get('/stories', [StoryController::class, 'index']);
-Route::get('/chapters/{id}', [ChapterController::class, 'show']);
-Route::post('/choices', [ChoiceController::class, 'store']);
-Route::get('/stories/{id}/first-chapter', [ChapterController::class, 'firstChapter']);
-
-
-
-
-// Route::prefix('api/v1/')->group(function () {
-//   Route::get('/test', function () {
-//     return response()->json(['message' => 'Hello, World from api!']);
-//   });
-
-//   Route::delete('/test', function () {
-//     return response()->json(['message' => 'Deleting']);
-//   });
-
-//   Route::post('/time', function () {
-//     $timeClient = request()->input('timeClient', 0);
-//     sleep(2); // Simulate a long-running process
-//     return response()->json(['timeClient' => $timeClient, 'timeServer' => now()]);
-//   });
-// });

@@ -2,26 +2,32 @@
 import DateStats from "./DateStats.vue";
 
 const props = defineProps({
-    user: {
-        type: Object,
-        required: true,
-        default: () => ({ name: "Guest" })
-    },
-    stats: {
-        type: Object,
-        required: true,
-        default: () => ({
-            attraction: 65,
-            connection: 50,
-            confidence: 30,
-            chemistry: 45,
-        }),
-    },
-    isLoading: {
-        type: Boolean,
-        default: false
-    }
+  user: {
+    type: Object,
+    required: true,
+    default: () => ({ name: "Guest" })
+  },
+  stats: {
+    type: Object,
+    required: true,
+    default: () => ({
+      attraction: 65,
+      connection: 50,
+      confidence: 30,
+      chemistry: 45,
+    }),
+  },
+  isLoading: {
+    type: Boolean,
+    default: false
+  }
 });
+
+const emit = defineEmits(['return-to-dashboard']);
+
+function goHome() {
+  emit('return-to-dashboard');
+}
 
 function logout() {
     const csrfToken = document
@@ -46,22 +52,36 @@ function logout() {
 </script>
 
 <template>
-    <header class="header">
-        <DateStats :stats="stats" />
-
-        <div class="profile-title">
-            <h1>
-                <span class="welcome-text">Welcome,</span>
-                {{ user.name }}
-            </h1>
-        </div>
-
-        <div class="actions">
-            <button @click="logout" class="logout-btn">
-                Sign Out
+  <header class="bg-white shadow-md">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <!-- Logo et bouton Home -->
+          <div class="flex-shrink-0 flex items-center">
+            <button @click="goHome" 
+                    class="text-2xl font-display font-bold text-dating-primary hover:text-romance-600 transition-colors">
+              DateSim
             </button>
+          </div>
         </div>
-    </header>
+
+        <!-- User Stats and Profile -->
+        <div class="flex items-center space-x-4">
+          <DateStats v-if="!isLoading" :stats="stats" />
+          
+          <div class="relative ml-3">
+            <div class="flex items-center space-x-3">
+              <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
+              <button @click="logout" 
+                      class="px-4 py-2 text-sm font-medium text-white rounded-md bg-dating-primary hover:bg-love-600 transition-colors">
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
 </template>
 
 <style scoped>

@@ -52,60 +52,60 @@ async function loadChapter(chapterId) {
     }
 }
 
-async function makeChoice(choiceId) {
-    try {
-        const response = await fetch('/api/choices', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ choice_id: choiceId })
-        })
-        
-        if (!response.ok) throw new Error('Failed to process choice')
-        
-        const choice = choices.value.find(c => c.id === choiceId)
-        if (choice && choice.next_chapter_id) {
-            await loadChapter(choice.next_chapter_id)
-        } else {
-            emit('return-to-dashboard')
-        }
-    } catch (err) {
-        error.value = err.message
-        console.error('Error:', err)
+async function makeChoice(choice) {
+  try {
+    const response = await fetch('/api/choices', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ choice_id: choice.id })
+    })
+    
+    if (!response.ok) throw new Error('Failed to process choice')
+    
+    // Au lieu d'utiliser find, chargeons directement le prochain chapitre
+    if (choice.next_chapter_id) {
+      await loadChapter(choice.next_chapter_id)
+    } else {
+      emit('return-to-dashboard')
     }
+  } catch (err) {
+    error.value = err.message
+    console.error('Error:', err)
+  }
 }
 </script>
 
 <template>
-    <div class="chapter-view">
-        <div v-if="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Loading chapter...</p>
-        </div>
-
-        <div v-else-if="error" class="error">
-            <p>{{ error }}</p>
-            <button @click="loadFirstChapter">Try Again</button>
-        </div>
-
-        <div v-else-if="chapter" class="chapter-content">
-            <h2>Chapter {{ chapter.chapter_number }}</h2>
-            <p>{{ chapter.content }}</p>
-
-            <div class="choices">
-                <button
-                    v-for="choice in choices"
-                    :key="choice.id"
-                    @click="makeChoice(choice.id)"
-                    class="choice-btn"
-                >
-                    {{ choice.text }}
-                </button>
-            </div>
-        </div>
+  <div class="max-w-3xl mx-auto space-y-8">
+    <button @click="$emit('return-to-dashboard')"
+            class="flex items-center text-romance-600 hover:text-romance-700 transition-colors">
+      <span class="mr-2">←</span> Return to Scenarios
+    </button>
+    
+    <div class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+      <h2 class="text-2xl font-bold text-romance-800">
+        {{ chapter?.title }}
+      </h2>
+      
+      <p class="text-gray-700 leading-relaxed text-lg">
+        {{ chapter?.content }}
+      </p>
+      
+      <div class="space-y-4 mt-8">
+        <button v-for="choice in choices" 
+                :key="choice.id"
+                @click="makeChoice(choice)"
+                class="w-full p-4 text-left rounded-lg border-2 border-romance-200 
+                       hover:border-romance-400 hover:bg-romance-50 transition-all
+                       focus:outline-none focus:ring-2 focus:ring-romance-500">
+          {{ choice.text }}
+        </button>
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
