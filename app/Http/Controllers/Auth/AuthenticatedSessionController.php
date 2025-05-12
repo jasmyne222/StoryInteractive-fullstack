@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User; // Ajoutez cette ligne
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -22,9 +25,22 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $request->authenticate();
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            if (!User::where('email', $request->email)->exists()) {
+                return back()->with('error', 'Aucun compte trouvé avec cette adresse email.');
+            }
+
+            throw ValidationException::withMessages([
+                'email' => __('Les informations d\'identification ne correspondent pas.'),
+            ]);
+        }
 
         $request->session()->regenerate();
 
