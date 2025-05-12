@@ -1,123 +1,160 @@
-# ✨ Laravel + Vue Fullstack Boilerplate ✨
+# 💕 Dating Simulator Interactive 💕
 
-## 🎓 WebMobUi - Media Engineering - HEIG-VD 🎓
+Un simulateur de rencontres interactif où vos choix influencent le déroulement de l'histoire. Vivez des aventures romantiques uniques à travers différents scénarios !
 
-This is a fullstack Laravel and Vue.js boilerplate designed for the course.
+## 📋 Prérequis
 
----
+Pour faire fonctionner ce projet, vous aurez besoin de :
 
-## ⚙️ Installation Steps ⚙️
+- PHP 8.2 ou supérieur
+- Composer
+- Node.js 18 ou supérieur
+- SQLite
+- Un navigateur web moderne
 
-Follow these steps to get your project up and running:
+## 🚀 Installation
 
-### 1. Create Project Folder 📁
-
+1. Clonez le repository :
 ```bash
-mkdir YourAppName
-cd YourAppName
+git clone <votre-repo>
+cd ProjectInteractive
 ```
 
-### 2. Clone Repository & Set Upstream 🔄
-
-Clone the boilerplate repository and then point the remote origin to your own GitHub repository (make sure you create it on GitHub first!).
-
+2. Installez les dépendances :
 ```bash
-# Clone the boilerplate
-git clone https://github.com/Chabloz/WebMobUI52-fullstack.git .
-
-# Set your repository as the origin
-git remote set-url origin https://github.com/YourGitHubUsername/YourAppName.git
-```
-
-### 3. Install Dependencies 📦
-
-Install both the Node.js and PHP dependencies.
-
-```bash
-# Install Node.js dependencies and build assets
-npm install
-npm run build
-
-# Install PHP dependencies
 composer install
+npm install
 ```
 
-### 4. Configure Environment 📝
-
-Copy the example environment file to create your own configuration.
-
+3. Configurez l'environnement :
 ```bash
 cp .env.example .env
-```
-
-👉 **Important:** Edit the `.env` file if you need to configure database connections or other settings. By default, it uses SQLite.
-
-### 5. Generate Key & Run Migrations 🔑
-
-Generate the unique application key and set up the database schema.
-
-```bash
-# Generate application key
 php artisan key:generate
-
-# Run database migrations
-php artisan migrate
+touch database/database.sqlite
 ```
 
-### 6. Run the Application ▶️
-
-Start the development server.
-
+4. Exécutez les migrations et les seeders :
 ```bash
-composer run dev
+php artisan migrate:fresh --seed
 ```
 
-🎉 Your application should now be running! 🎉
+5. Construisez les assets :
+```bash
+npm run build
+```
 
----
+## 🎮 Lancement en mode développement
 
-## Installation
+Dans un premier terminal :
+```bash
+php artisan serve
+```
 
-1. Clonez le repository
-2. Copiez `.env.example` vers `.env`
-3. Créez la base de données SQLite :
+Dans un second terminal :
+```bash
+npm run dev
+```
 
-   ```bash
-   touch database/database.sqlite
-   ```
+L'application sera accessible à :
+- Frontend : http://localhost:5173
+- Backend API : http://localhost:8000
 
-4. Installez les dépendances :
+## 📱 Fonctionnalités
 
-   ```bash
-   composer install
-   npm install
-   ```
+- 📖 Multiples histoires avec différents scénarios
+- 🤔 Système de choix influençant le déroulement de l'histoire
+- 💾 Sauvegarde automatique de la progression
+- 🔄 Possibilité de recommencer une histoire
+- 🎨 Interface utilisateur moderne et responsive
 
-5. Générez la clé d'application :
+## 🛠️ Architecture
 
-   ```bash
-   php artisan key:generate
-   ```
+- **Frontend** : Vue.js 3 avec Composition API
+- **Backend** : Laravel 12
+- **Base de données** : SQLite
+- **Styling** : Tailwind CSS
+- **State Management** : Vue Composition API + Composables
+- **API** : REST API avec sanctum pour l'authentification
 
-6. Lancez les migrations et les seeders :
+## 📚 Structure des Stories
 
-   ```bash
-   php artisan migrate:fresh --seed
-   ```
+Notre système d'histoire est organisé de la manière suivante :
 
-   ## API Endpoints
+```json
+{
+  "story": {
+    "id": 1,
+    "title": "Une rencontre inattendue",
+    "description": "Votre aventure commence dans un café...",
+    "chapters": [
+      {
+        "id": 1,
+        "content": "Le texte du chapitre...",
+        "choices": [
+          {
+            "id": 1,
+            "text": "Aller lui parler",
+            "next_chapter": 2
+          },
+          {
+            "id": 2,
+            "text": "Rester à sa place",
+            "next_chapter": 3
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 🔄 API Endpoints
 
 ### Stories
-- GET /api/stories : Liste des histoires
-- POST /api/stories : Créer une histoire
-- GET /api/stories/{id} : Détails d'une histoire
-- PUT /api/stories/{id} : Modifier une histoire
-- DELETE /api/stories/{id} : Supprimer une histoire
+```http
+GET /api/stories         # Liste des histoires disponibles
+GET /api/stories/{id}    # Détails d'une histoire
+```
 
 ### Chapters
-- GET /api/stories/{id}/first-chapter : Premier chapitre
-- GET /api/chapters/{id} : Détails d'un chapitre
+```http
+GET /api/chapters/{id}           # Détails d'un chapitre
+GET /api/chapters/{id}/choices   # Choix disponibles
+```
 
 ### Progress
-- POST /api/progress : Sauvegarder la progression
-- GET /api/progress : Récupérer la progression
+```http
+GET /api/progress              # Progression du joueur
+POST /api/progress/update      # Mise à jour de la progression
+POST /api/progress/reset       # Réinitialisation
+```
+
+## 🔧 Configuration
+
+Le fichier `.env` doit contenir :
+
+```env
+APP_NAME="Dating Simulator"
+APP_ENV=local
+APP_KEY=your-key-here
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+```
+
+## 👥 Contribution
+
+1. Fork le projet
+2. Créez votre branche (`git checkout -b feature/NouvelleFonctionnalite`)
+3. Committez vos changements (`git commit -m 'Ajout d'une nouvelle fonctionnalité'`)
+4. Push vers la branche (`git push origin feature/NouvelleFonctionnalite`)
+5. Ouvrez une Pull Request
+
+## 📝 License
+
+[MIT](LICENSE)

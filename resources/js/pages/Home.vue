@@ -19,6 +19,7 @@ const loading = ref(true);
 const error = ref(null);
 const currentChapter = ref(null);
 const choices = ref([]);
+const stories = ref([]);
 
 onMounted(() => {
     loadUserProgress();
@@ -180,6 +181,29 @@ function resetProgress() {
 function returnToDashboard() {
     emit("return-to-dashboard");
 }
+
+// Fetch stories for the list
+const { data, error: fetchError, loading: fetchLoading, execute } = useFetchJson({
+  url: "/api/v1/stories",
+  method: "GET",
+  immediate: true,
+});
+
+watch(data, (newData) => {
+  if (newData) {
+    stories.value = newData;
+  }
+});
+
+watch(fetchError, (err) => {
+  if (err) {
+    error.value = err;
+  }
+});
+
+watch(fetchLoading, (isLoading) => {
+  loading.value = isLoading;
+});
 </script>
 
 <template>
@@ -216,6 +240,15 @@ function returnToDashboard() {
                 <button @click="resetProgress" class="reset-btn">
                     Restart Date
                 </button>
+            </div>
+
+            <div>
+              <h1>Liste des histoires</h1>
+              <div v-if="loading">Chargement...</div>
+              <div v-else-if="error">{{ error }}</div>
+              <ul v-else>
+                <li v-for="story in stories" :key="story.id">{{ story.title }}</li>
+              </ul>
             </div>
         </main>
     </div>

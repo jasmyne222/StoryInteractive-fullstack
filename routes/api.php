@@ -11,7 +11,7 @@ Route::prefix('v1')->group(function () {
     // Routes publiques
     Route::get('stories', [StoryController::class, 'index']);
     Route::get('stories/{id}', [StoryController::class, 'show']);
-    Route::get('stories/{id}/first-chapter', [ChapterController::class, 'firstChapter']);
+    Route::get('stories/{id}/first-chapter', [ChapterController::class, 'firstChapter']); // Ajout de cette ligne
     Route::get('chapters/{id}', [ChapterController::class, 'show']);
     Route::get('chapters/{chapterId}/choices', [ChoiceController::class, 'index']);
 
@@ -21,8 +21,5 @@ Route::prefix('v1')->group(function () {
             return response()->json($request->user());
         });
         Route::post('progress', [ProgressController::class, 'store']);
-        Route::get('progress', [ProgressController::class, 'show']);
-        Route::apiResource('stories', StoryController::class)
-            ->except(['index', 'show']);
     });
 });
