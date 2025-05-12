@@ -9,12 +9,6 @@ const emit = defineEmits(["return-to-dashboard"]);
 
 // State management
 const userName = ref("");
-const userStats = ref({
-    attraction: 65,
-    connection: 50,
-    confidence: 30,
-    chemistry: 45,
-});
 const loading = ref(true);
 const error = ref(null);
 const currentChapter = ref(null);
@@ -30,12 +24,6 @@ function loadUserProgress() {
     watch(response, (progress) => {
         if (progress && progress.success && progress.data) {
             userName.value = progress.data.user_name || "Guest";
-            userStats.value = {
-                attraction: progress.data.attraction || 65,
-                connection: progress.data.connection || 50,
-                confidence: progress.data.confidence || 30,
-                chemistry: progress.data.chemistry || 45,
-            };
 
             if (progress.data.chapter_id >= 10) {
                 loadDateEnding(progress.data.chapter_id);
@@ -104,13 +92,6 @@ function makeChoice(choice) {
     
     watch(response, (progressUpdate) => {
         if (progressUpdate && progressUpdate.success && progressUpdate.data) {
-            userStats.value = {
-                attraction: progressUpdate.data.attraction,
-                connection: progressUpdate.data.connection,
-                confidence: progressUpdate.data.confidence,
-                chemistry: progressUpdate.data.chemistry,
-            };
-
             if (progressUpdate.data.chapter_id >= 10) {
                 loadDateEnding(progressUpdate.data.chapter_id);
             } else if (progressUpdate.data.chapter_id) {
@@ -129,29 +110,8 @@ function loadDateEnding(endChapterId) {
         return;
     }
 
-    // Determine ending based on stats
-    const { attraction, connection, confidence, chemistry } = userStats.value;
-
-    // Perfect Match
-    if (attraction >= 75 && connection >= 70 && chemistry >= 65) {
-        loadChapter(10);
-    }
-    // Strong Connection
-    else if (connection >= 65 && chemistry >= 55) {
-        loadChapter(11);
-    }
-    // Friend Zone
-    else if (connection >= 50 && attraction <= 40) {
-        loadChapter(12);
-    }
-    // Awkward Ending
-    else if (confidence <= 30 || chemistry <= 25) {
-        loadChapter(13);
-    }
     // Default - Neutral Ending
-    else {
-        loadChapter(14);
-    }
+    loadChapter(14);
 }
 
 function resetProgress() {
@@ -162,12 +122,6 @@ function resetProgress() {
 
     watch(response, (resetStatus) => {
         if (resetStatus && resetStatus.success) {
-            userStats.value = {
-                attraction: 65,
-                connection: 50,
-                confidence: 30,
-                chemistry: 45,
-            };
             loadFirstChapter();
             loading.value = false;
         } else {
@@ -208,7 +162,7 @@ watch(fetchLoading, (isLoading) => {
 
 <template>
     <div class="dating-simulator">
-        <TheHeader :userName="userName" :stats="userStats" />
+        <TheHeader :userName="userName" />
 
         <main class="content">
             <div class="top-controls">

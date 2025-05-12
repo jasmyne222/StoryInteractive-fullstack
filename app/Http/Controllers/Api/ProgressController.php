@@ -10,21 +10,22 @@ class ProgressController extends Controller
 {
     public function store(ProgressStoreRequest $request)
     {
-        // Les données sont déjà validées ici
+        \Log::info('Authenticated user ID:', ['id' => auth()->id()]);
+
         $progress = UserProgress::updateOrCreate(
             [
                 'user_id' => auth()->id(),
-                'story_id' => $request->validated('story_id')
+                'story_id' => $request->input('story_id'),
             ],
             [
-                'chapter_id' => $request->validated('chapter_id'),
-                'choices_made' => $request->validated('choices_made', [])
+                'chapter_id' => $request->input('chapter_id'),
+                'choices_made' => $request->input('choices_made', []),
             ]
         );
 
         return response()->json([
             'success' => true,
-            'data' => $progress
+            'data' => $progress,
         ]);
     }
 }

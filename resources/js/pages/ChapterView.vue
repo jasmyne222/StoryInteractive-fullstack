@@ -29,7 +29,6 @@ async function loadFirstChapter() {
         
         console.log('Loading first chapter for story:', props.storyId); 
         
-        // Correction ici : ajouter /api/ au début de l'URL
         const chapterData = await fetchJson(`/api/v1/stories/${props.storyId}/first-chapter`);
         
         console.log('Chapter data received:', chapterData); 
@@ -108,16 +107,13 @@ async function saveProgress() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
+                'X-CSRF-TOKEN': csrfToken,
             },
-            credentials: 'include', // Important pour l'authentification
             body: JSON.stringify({
                 story_id: props.storyId,
                 chapter_id: chapter.value.id,
-                history: history.value,
-                choices_made: history.value.map(h => h.choiceId)
-            })
+                choices_made: history.value.map(choice => choice.choiceId),
+            }),
         });
 
         if (!response.ok) {

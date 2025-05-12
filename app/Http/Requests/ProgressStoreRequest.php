@@ -26,7 +26,7 @@ class ProgressStoreRequest extends FormRequest
             'story_id' => 'required|exists:stories,id',
             'chapter_id' => 'required|exists:chapters,id',
             'choices_made' => 'array',
-            'choices_made.*' => 'exists:choices,id'
+            'choices_made.*' => 'exists:choices,id',
         ];
     }
 
