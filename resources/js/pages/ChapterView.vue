@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useFetchJson } from '../composables/useFetchJson'
 
 const props = defineProps({
     storyId: {
@@ -15,31 +16,23 @@ const loading = ref(true)
 const error = ref(null)
 const history = ref([]) // Pour stocker l'historique des chapitres
 const progress = ref(0) // Pour la barre de progression
+const isSaving = ref(false)
+const saveSuccess = ref(false)
 
-onMounted(() => {
-    loadFirstChapter()
-})
+const { data, error: fetchError, loading: fetchLoading, fetchJson } = useFetchJson()
 
-async function loadFirstChapter() {
+onMounted(async () => {
     try {
-        loading.value = true
-        error.value = null
-        history.value = [] // Réinitialiser l'historique
-        
-        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`)
-        const result = await response.json()
-        
-        if (result.success && result.data) {
+        const result = await fetchJson(`/api/stories/${props.storyId}/first-chapter`)
+        if (result.success) {
             chapter.value = result.data
             choices.value = result.data.choices || []
             updateProgress()
         }
     } catch (err) {
-        error.value = `Failed to load chapter: ${err.message}`
-    } finally {
-        loading.value = false
+        console.error('Failed to load chapter:', err)
     }
-}
+})
 
 async function makeChoice(choice) {
     try {
@@ -87,65 +80,114 @@ function updateProgress() {
     const currentChapter = chapter.value.chapter_number
     progress.value = (currentChapter / totalChapters) * 100
 }
+
+async function saveProgress() {
+  try {
+    isSaving.value = true
+    // Logique de sauvegarde...
+    await fetch('/api/progress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        story_id: props.storyId,
+        chapter_id: chapter.value.id,
+        choices_made: history.value.map(h => h.choice?.id).filter(Boolean)
+      })
+    })
+    
+    saveSuccess.value = true
+    setTimeout(() => {
+      saveSuccess.value = false
+    }, 3000)
+  } catch (err) {
+    error.value = "Erreur lors de la sauvegarde"
+  } finally {
+    isSaving.value = false
+  }
+}
 </script>
 
 <template>
-    <div class="max-w-3xl mx-auto space-y-8">
-        <!-- Barre de progression -->
-        <div class="bg-gray-200 rounded-full h-2.5 mb-4">
-            <div class="bg-dating-primary h-2.5 rounded-full transition-all duration-500"
-                 :style="{ width: `${progress}%` }">
-            </div>
-        </div>
+  <div class="relative max-w-3xl mx-auto">
+    <!-- Indicateur de sauvegarde -->
+    <transition name="slide-fade">
+      <div v-if="isSaving" 
+           class="fixed bottom-4 right-4 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg shadow-lg flex items-center">
+        <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        Sauvegarde en cours...
+      </div>
+    </transition>
 
-        <!-- Boutons de navigation -->
-        <div class="flex justify-between items-center">
-            <button @click="goBack" 
-                    :disabled="history.length === 0"
-                    :class="['px-4 py-2 rounded-lg transition-colors',
-                            history.length === 0 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200']">
-                ← Retour
-            </button>
-            
-            <button @click="$emit('return-to-dashboard')"
-                    class="px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
-                Quitter l'histoire
-            </button>
-        </div>
+    <transition name="slide-fade">
+      <div v-if="saveSuccess" 
+           class="fixed bottom-4 right-4 bg-green-100 text-green-700 px-4 py-2 rounded-lg shadow-lg flex items-center">
+        <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+        Progression sauvegardée
+      </div>
+    </transition>
 
-        <!-- Chapitre et choix -->
-        <div v-if="loading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-dating-primary border-t-transparent mx-auto"></div>
-            <p class="mt-4 text-gray-600">Chargement...</p>
-        </div>
-
-        <div v-else-if="error" class="text-center py-12">
-            <p class="text-red-500">{{ error }}</p>
-            <button @click="loadFirstChapter" 
-                    class="mt-4 px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
-                Réessayer
-            </button>
-        </div>
-
-        <div v-else-if="chapter" class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-            <p class="text-gray-700 leading-relaxed text-lg">
-                {{ chapter.content }}
-            </p>
-
-            <div v-if="choices.length" class="space-y-4 mt-8">
-                <button v-for="choice in choices"
-                        :key="choice.id"
-                        @click="makeChoice(choice)"
-                        class="w-full p-4 text-left rounded-lg border-2 border-dating-primary/20 
-                               hover:border-dating-primary hover:bg-dating-primary/5 
-                               transition-all duration-200">
-                    {{ choice.text }}
-                </button>
-            </div>
-        </div>
+    <!-- Barre de progression -->
+    <div class="bg-gray-200 rounded-full h-2.5 mb-4">
+      <div class="bg-dating-primary h-2.5 rounded-full transition-all duration-500"
+           :style="{ width: `${progress}%` }">
+      </div>
     </div>
+
+    <!-- Boutons de navigation -->
+    <div class="flex justify-between items-center">
+      <button @click="goBack" 
+              :disabled="history.length === 0"
+              :class="['px-4 py-2 rounded-lg transition-colors',
+                      history.length === 0 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200']">
+          ← Retour
+      </button>
+      
+      <button @click="$emit('return-to-dashboard')"
+              class="px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
+          Quitter l'histoire
+      </button>
+    </div>
+
+    <!-- Chapitre et choix -->
+    <div v-if="fetchLoading" class="text-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-4 border-dating-primary border-t-transparent mx-auto"></div>
+      <p class="mt-4 text-gray-600">Chargement...</p>
+    </div>
+
+    <div v-else-if="fetchError" class="text-center py-12">
+      <p class="text-red-500">{{ fetchError }}</p>
+      <button @click="loadFirstChapter" 
+              class="mt-4 px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
+          Réessayer
+      </button>
+    </div>
+
+    <div v-else-if="chapter" class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+      <p class="text-gray-700 leading-relaxed text-lg">
+          {{ chapter.content }}
+      </p>
+
+      <div v-if="choices.length" class="space-y-4 mt-8">
+        <button v-for="choice in choices"
+                :key="choice.id"
+                @click="makeChoice(choice)"
+                class="w-full p-4 text-left rounded-lg border-2 border-dating-primary/20 
+                       hover:border-dating-primary hover:bg-dating-primary/5 
+                       transition-all duration-200">
+            {{ choice.text }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -239,6 +281,17 @@ function updateProgress() {
 .retry-btn:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }
 
 @media (max-width: 768px) {

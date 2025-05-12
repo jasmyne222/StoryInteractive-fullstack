@@ -104,3 +104,20 @@ composer run dev
    ```bash
    php artisan migrate:fresh --seed
    ```
+
+   ## API Endpoints
+
+### Stories
+- GET /api/stories : Liste des histoires
+- POST /api/stories : Créer une histoire
+- GET /api/stories/{id} : Détails d'une histoire
+- PUT /api/stories/{id} : Modifier une histoire
+- DELETE /api/stories/{id} : Supprimer une histoire
+
+### Chapters
+- GET /api/stories/{id}/first-chapter : Premier chapitre
+- GET /api/chapters/{id} : Détails d'un chapitre
+
+### Progress
+- POST /api/progress : Sauvegarder la progression
+- GET /api/progress : Récupérer la progression
