@@ -1,23 +1,5 @@
 <script setup>
-import DateStats from "./DateStats.vue";
 import { ref, onMounted } from 'vue';
-
-const props = defineProps({
-  stats: {
-    type: Object,
-    required: true,
-    default: () => ({
-      attraction: 65,
-      connection: 50,
-      confidence: 30,
-      chemistry: 45,
-    }),
-  },
-  isLoading: {
-    type: Boolean,
-    default: false
-  }
-});
 
 const emit = defineEmits(['return-to-dashboard']);
 
@@ -26,9 +8,7 @@ function goHome() {
 }
 
 function logout() {
-    const csrfToken = document
-        .querySelector('meta[name="csrf-token"]')
-        ?.getAttribute("content");
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
     fetch("/logout", {
         method: "POST",
@@ -37,6 +17,7 @@ function logout() {
             "X-CSRF-TOKEN": csrfToken,
             Accept: "application/json",
         },
+        credentials: 'include'
     })
         .then(() => {
             window.location.href = "/login";
@@ -56,7 +37,8 @@ onMounted(async () => {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-            }
+            },
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -65,7 +47,6 @@ onMounted(async () => {
 
         const userData = await response.json();
         user.value = userData;
-        console.log('User data loaded:', userData);
     } catch (error) {
         console.error('Error fetching user data:', error);
     }
@@ -77,14 +58,12 @@ onMounted(async () => {
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <div class="flex-shrink-0 flex items-center">
-          <!-- Logo et bouton Home -->
           <button @click="goHome" 
-                  class="text-2xl font-display font-bold text-dating-primary hover:text-romance-600 transition-colors">
+                  class="text-2xl font-display font-bold text-dating-primary hover:text-dating-primary/90 transition-colors">
             DateSim
           </button>
         </div>
 
-        <!-- User Profile -->
         <div class="flex items-center space-x-4">
           <div class="relative ml-3">
             <div class="flex items-center space-x-3">
@@ -92,7 +71,7 @@ onMounted(async () => {
                 {{ user.name }}
               </span>
               <button @click="logout" 
-                      class="px-4 py-2 text-sm font-medium text-white rounded-md bg-dating-primary hover:bg-love-600 transition-colors">
+                      class="px-4 py-2 text-sm font-medium text-white rounded-md bg-dating-primary hover:bg-dating-primary/90 transition-colors">
                 Sign Out
               </button>
             </div>

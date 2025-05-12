@@ -14,11 +14,15 @@ export function useFetchJson() {
         error.value = null
         
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            
             const response = await fetch(url, {
                 ...options,
+                credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
                     ...options.headers
                 }
             })
@@ -28,8 +32,12 @@ export function useFetchJson() {
             }
 
             const result = await response.json()
-            data.value = result
-            return result
+            if (!result.success) {
+                throw new Error(result.message || 'Une erreur est survenue')
+            }
+
+            data.value = result.data
+            return result.data
         } catch (e) {
             error.value = e.message
             throw e
