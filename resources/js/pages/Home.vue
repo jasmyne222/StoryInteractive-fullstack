@@ -25,7 +25,7 @@ onMounted(() => {
 });
 
 function loadUserProgress() {
-    const { data: response, error: fetchError } = useFetchJson("/api/progress");
+    const { data: response, error: fetchError } = useFetchJson("/api/v1/progress");  // Ajout de v1
     watch(response, (progress) => {
         if (progress && progress.success && progress.data) {
             userName.value = progress.data.user_name || "Guest";
@@ -54,7 +54,7 @@ function loadUserProgress() {
 }
 
 function loadFirstChapter() {
-    const { data: response, error: fetchError } = useFetchJson("/api/chapters/first");
+    const { data: response, error: fetchError } = useFetchJson("/api/v1/chapters/first");  // Ajout de v1
     watch(response, (firstChapter) => {
         if (firstChapter && firstChapter.success && firstChapter.data) {
             currentChapter.value = firstChapter.data;
@@ -68,7 +68,7 @@ function loadFirstChapter() {
 }
 
 function loadChapter(chapterId) {
-    const { data: response, error: fetchError } = useFetchJson(`/api/chapters/${chapterId}`);
+    const { data: response, error: fetchError } = useFetchJson(`/api/v1/chapters/${chapterId}`);  // Ajout de v1
     watch(response, (chapter) => {
         if (chapter && chapter.success && chapter.data) {
             currentChapter.value = chapter.data;
@@ -82,7 +82,7 @@ function loadChapter(chapterId) {
 }
 
 function loadChoicesForChapter(chapterId) {
-    const { data: response, error: fetchError } = useFetchJson(`/api/chapters/${chapterId}/choices`);
+    const { data: response, error: fetchError } = useFetchJson(`/api/v1/chapters/${chapterId}/choices`);  // Ajout de v1
     watch(response, (chapterChoices) => {
         if (chapterChoices && chapterChoices.success && chapterChoices.data) {
             choices.value = chapterChoices.data;
@@ -96,7 +96,7 @@ function loadChoicesForChapter(chapterId) {
 
 function makeChoice(choice) {
     const { data: response, error: fetchError } = useFetchJson({
-        url: "/api/progress/update",
+        url: "/api/v1/progress/update",  // Ajout de v1
         method: "PATCH",
         data: { choice_id: choice.id },
     });
@@ -155,7 +155,7 @@ function loadDateEnding(endChapterId) {
 
 function resetProgress() {
     const { data: response, error: fetchError } = useFetchJson({
-        url: "/api/progress/reset",
+        url: "/api/v1/progress/reset",  // Ajout de v1
         method: "PATCH",
     });
 

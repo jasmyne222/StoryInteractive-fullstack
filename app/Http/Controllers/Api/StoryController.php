@@ -8,18 +8,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoryRequest;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Traits\ApiResponse;
 
 class StoryController extends Controller
 {
+    use ApiResponse;
+
     public function index(): JsonResponse
     {
         try {
-            \Log::info('Attempting to fetch stories');
-            
             $stories = Story::all();
             
-            \Log::info('Found ' . $stories->count() . ' stories');
-
             $formattedStories = $stories->map(function($story) {
                 return [
                     'id' => $story->id,
@@ -29,10 +28,8 @@ class StoryController extends Controller
                 ];
             });
 
-            \Log::info('Formatted stories data:', $formattedStories->toArray());
-
             return response()->json([
-                'success' => true,
+                'success' => true,  // Ajout de la propriété success
                 'data' => $formattedStories
             ]);
 

@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Chapter;
-use App\Models\Story;
-use App\Models\Choice;
+use App\Models\Story; // N'oubliez pas d'importer le modèle Story
+use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ChapterController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Retourne tous les chapitres (optionnel si tu veux afficher une liste dans le back).
      */
@@ -30,81 +33,70 @@ class ChapterController extends Controller
     /**
      * Affiche un chapitre avec ses choix.
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         try {
-            \Log::info('Loading chapter: ' . $id); // Debug log
-            
             $chapter = Chapter::with('choices')->findOrFail($id);
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $chapter->id,
-                    'content' => $chapter->content,
-                    'chapter_number' => $chapter->chapter_number,
-                    'choices' => $chapter->choices->map(function($choice) {
-                        return [
-                            'id' => $choice->id,
-                            'text' => $choice->text,
-                            'next_chapter_id' => $choice->next_chapter_id
-                        ];
-                    })
-                ]
+            return $this->success([
+                'id' => $chapter->id,
+                'content' => $chapter->content,
+                'chapter_number' => $chapter->chapter_number,
+                'choices' => $chapter->choices->map(function($choice) {
+                    return [
+                        'id' => $choice->id,
+                        'text' => $choice->text,
+                        'next_chapter_id' => $choice->next_chapter_id
+                    ];
+                })
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error in show: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error loading chapter: ' . $e->getMessage()
-            ], 500);
+            return $this->error('Erreur lors du chargement du chapitre', 500);
         }
     }
 
     /**
      * Récupère le premier chapitre d'une histoire.
      */
-    public function firstChapter($storyId)
+    public function firstChapter($storyId): JsonResponse
     {
         try {
-            \Log::info('Loading first chapter for story: ' . $storyId);
+            // Vérifions d'abord si l'histoire existe
+            $story = Story::findOrFail($storyId);
             
+            \Log::info('Fetching first chapter for story: ' . $storyId);
+            
+            // Recherchons le premier chapitre de cette histoire
             $chapter = Chapter::where('story_id', $storyId)
-                             ->orderBy('chapter_number')
-                             ->with('choices') // Eager loading des choix
-                             ->first();
+                ->orderBy('chapter_number')
+                ->with('choices')
+                ->firstOrFail(); // Utilisons firstOrFail au lieu de first
 
             if (!$chapter) {
-                \Log::warning('No chapter found for story: ' . $storyId);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No chapters found for this story'
-                ], 404);
+                \Log::error('No chapter found for story: ' . $storyId);
+                return $this->error('Aucun chapitre trouvé pour cette histoire', 404);
             }
 
-            \Log::info('Found chapter: ' . $chapter->id);
+            \Log::info('Chapter found:', ['chapter' => $chapter->toArray()]);
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $chapter->id,
-                    'content' => $chapter->content,
-                    'chapter_number' => $chapter->chapter_number,
-                    'choices' => $chapter->choices->map(function($choice) {
-                        return [
-                            'id' => $choice->id,
-                            'text' => $choice->text,
-                            'next_chapter_id' => $choice->next_chapter_id
-                        ];
-                    })
-                ]
+            // Retournons les données du chapitre avec ses choix
+            return $this->success([
+                'id' => $chapter->id,
+                'content' => $chapter->content,
+                'chapter_number' => $chapter->chapter_number,
+                'choices' => $chapter->choices->map(function($choice) {
+                    return [
+                        'id' => $choice->id,
+                        'text' => $choice->text,
+                        'next_chapter_id' => $choice->next_chapter_id
+                    ];
+                })
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('Story or Chapter not found: ' . $e->getMessage());
+            return $this->error('Histoire ou chapitre non trouvé', 404);
         } catch (\Exception $e) {
             \Log::error('Error in firstChapter: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error loading chapter'
-            ], 500);
+            return $this->error('Erreur lors du chargement du premier chapitre', 500);
         }
     }
 

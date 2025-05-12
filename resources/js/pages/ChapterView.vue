@@ -24,26 +24,26 @@ onMounted(async () => {
 
 async function loadFirstChapter() {
     try {
-        loading.value = true
-        const response = await fetch(`/api/stories/${props.storyId}/first-chapter`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
+        loading.value = true;
+        const { fetchJson } = useFetchJson();
         
-        const result = await response.json()
+        console.log('Loading first chapter for story:', props.storyId); 
         
-        if (result.success && result.data) {
-            chapter.value = result.data
-            choices.value = result.data.choices || []
-            updateProgress()
+        // Correction ici : ajouter /api/ au début de l'URL
+        const chapterData = await fetchJson(`/api/v1/stories/${props.storyId}/first-chapter`);
+        
+        console.log('Chapter data received:', chapterData); 
+        
+        if (chapterData) {
+            chapter.value = chapterData;
+            choices.value = chapterData.choices || [];
+            updateProgress();
         }
     } catch (err) {
-        error.value = "Erreur lors du chargement du chapitre"
-        console.error('Failed to load first chapter:', err)
+        console.error('Error loading first chapter:', err);
+        error.value = "Erreur lors du chargement du chapitre";
     } finally {
-        loading.value = false
+        loading.value = false;
     }
 }
 
@@ -54,26 +54,21 @@ async function makeChoice(choice) {
             return
         }
 
-        // Sauvegarder le chapitre actuel dans l'historique
         history.value.push({
             chapter: chapter.value,
-            choices: choices.value
+            choices: choices.value,
+            choiceId: choice.id
         })
 
         loading.value = true
+        const { fetchJson } = useFetchJson()
         
-        const response = await fetch(`/api/chapters/${choice.next_chapter_id}`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
+        // Correction ici aussi : ajouter /api/ au début de l'URL
+        const chapterData = await fetchJson(`/api/v1/chapters/${choice.next_chapter_id}`)
         
-        const result = await response.json()
-        
-        if (result.success && result.data) {
-            chapter.value = result.data
-            choices.value = result.data.choices || []
+        if (chapterData) {
+            chapter.value = chapterData
+            choices.value = chapterData.choices || []
             updateProgress()
         }
     } catch (err) {
@@ -105,6 +100,43 @@ function retryOperation() {
 
 function dismissError() {
     error.value = null
+}
+
+async function saveProgress() {
+    try {
+        const response = await fetch('/api/v1/progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include', // Important pour l'authentification
+            body: JSON.stringify({
+                story_id: props.storyId,
+                chapter_id: chapter.value.id,
+                history: history.value,
+                choices_made: history.value.map(h => h.choiceId)
+            })
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Rediriger vers la page de connexion si non authentifié
+                window.location.href = '/login';
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to save progress');
+        }
+    } catch (err) {
+        console.error('Failed to save progress:', err);
+        error.value = "Erreur lors de la sauvegarde de la progression";
+    }
 }
 </script>
 

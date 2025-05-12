@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
+import { useFetchJson } from '@/composables/useFetchJson';
 import TheHeader from '@/components/TheHeader.vue'
 import Home from '@/pages/Home.vue'
 import ChapterView from '@/pages/ChapterView.vue'
@@ -18,24 +19,13 @@ onMounted(async () => {
         isLoading.value = true
         console.log('Fetching stories...')
         
-        const response = await fetch('/api/stories', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
+        const { fetchJson } = useFetchJson();
+        const stories = await fetchJson('/api/v1/stories');
         
-        console.log('Response status:', response.status)
+        console.log('Stories data:', stories)  // Modification ici : utiliser stories au lieu de result
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        const result = await response.json()
-        console.log('Stories data:', result)
-        
-        if (result.success && result.data) {
-            dateScenarios.value = result.data.map(story => ({
+        if (stories) {  // Modification ici : vérifier stories directement
+            dateScenarios.value = stories.map(story => ({
                 id: story.id,
                 title: story.title,
                 description: story.summary,
@@ -53,10 +43,10 @@ onMounted(async () => {
 });
 
 function startDate(storyId) {
-    console.log('Starting date with ID:', storyId) // Debug log
+    console.log('Starting date with ID:', storyId) 
     if (storyId) {
         currentView.value = "date-simulator"
-        chapterId.value = parseInt(storyId, 10) // Conversion explicite en nombre
+        chapterId.value = parseInt(storyId, 10)
     }
 }
 

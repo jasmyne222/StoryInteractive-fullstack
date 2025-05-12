@@ -33,7 +33,7 @@ const user = ref({
 
 onMounted(async () => {
     try {
-        const response = await fetch('/api/user', {
+        const response = await fetch('/api/v1/user', {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
