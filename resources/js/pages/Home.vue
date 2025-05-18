@@ -85,7 +85,7 @@ function loadChoicesForChapter(chapterId) {
 
 function makeChoice(choice) {
     const { data: response, error: fetchError } = useFetchJson({
-        url: "/api/v1/progress/update",  // Ajout de v1
+        url: "/api/v1/progress/update",  
         method: "PATCH",
         data: { choice_id: choice.id },
     });
@@ -116,7 +116,7 @@ function loadDateEnding(endChapterId) {
 
 function resetProgress() {
     const { data: response, error: fetchError } = useFetchJson({
-        url: "/api/v1/progress/reset",  // Ajout de v1
+        url: "/api/v1/progress/reset",  
         method: "PATCH",
     });
 
@@ -136,7 +136,7 @@ function returnToDashboard() {
     emit("return-to-dashboard");
 }
 
-// Fetch stories for the list
+// Fetch stories 
 const { data, error: fetchError, loading: fetchLoading, execute } = useFetchJson({
   url: "/api/v1/stories",
   method: "GET",
@@ -229,7 +229,6 @@ watch(fetchLoading, (isLoading) => {
     background-color: var(--bg-light);
 }
 
-/* Rest of the styles remain similar but with updated colors and theme-appropriate names */
 .content {
     padding: 2rem;
     max-width: 800px;
@@ -238,5 +237,4 @@ watch(fetchLoading, (isLoading) => {
     flex: 1;
 }
 
-/* Add more styling as needed */
 </style>

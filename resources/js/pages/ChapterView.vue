@@ -11,7 +11,10 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['return-to-dashboard'])
+const emit = defineEmits([
+    'return-to-dashboard',
+    'show-notification'  
+])
 const chapter = ref(null)
 const choices = ref([])
 const loading = ref(true)
@@ -26,13 +29,11 @@ onMounted(async () => {
 async function loadFirstChapter() {
     try {
         loading.value = true;
-        const { fetchJson } = useFetchJson();
+        const { fetchJson } = useFetchJson(); 
         
         console.log('Loading first chapter for story:', props.storyId); 
         
         const chapterData = await fetchJson(`/api/v1/stories/${props.storyId}/first-chapter`);
-        
-        console.log('Chapter data received:', chapterData); 
         
         if (chapterData) {
             chapter.value = chapterData;
@@ -50,41 +51,56 @@ async function loadFirstChapter() {
 async function makeChoice(choice) {
     try {
         if (!choice.next_chapter_id) {
-            emit('return-to-dashboard')
-            return
+            emit('return-to-dashboard');
+            return;
         }
 
-        history.value.push({
-            chapter: chapter.value,
-            choices: choices.value,
-            choiceId: choice.id
-        })
+        // Ajouter le chapitre actuel à l'historique 
+        if (chapter.value) {
+            history.value.push(chapter.value.id);
+        }
 
-        loading.value = true
-        const { fetchJson } = useFetchJson()
+        loading.value = true;
+        const { fetchJson } = useFetchJson();
         
-        const chapterData = await fetchJson(`/api/v1/chapters/${choice.next_chapter_id}`)
+        const chapterData = await fetchJson(`/api/v1/chapters/${choice.next_chapter_id}`);
         
         if (chapterData) {
-            chapter.value = chapterData
-            choices.value = chapterData.choices || []
-            updateProgress()
-            // Sauvegarder la progression après chaque choix
-            await saveProgress()
+            chapter.value = chapterData;
+            choices.value = chapterData.choices || [];
+            updateProgress();
+            await saveProgress();
         }
     } catch (err) {
-        error.value = "Erreur lors du chargement du prochain chapitre"
+        error.value = "Erreur lors du chargement du prochain chapitre";
     } finally {
-        loading.value = false
+        loading.value = false;
     }
 }
 
-function goBack() {
-    if (history.value.length > 0) {
-        const previousState = history.value.pop()
-        chapter.value = previousState.chapter
-        choices.value = previousState.choices
-        updateProgress()
+async function goBack() {
+    if (history.value.length === 0) {
+        return
+    }
+
+    try {
+        // On récupère l'ID du dernier chapitre
+        const previousChapterId = history.value.pop()
+        
+        if (previousChapterId) {
+            // On charge le chapitre précédent
+            const { fetchJson } = useFetchJson()
+            const previousChapter = await fetchJson(`/api/v1/chapters/${previousChapterId}`)
+            
+            if (previousChapter) {
+                chapter.value = previousChapter
+                choices.value = previousChapter.choices || []
+                updateProgress()
+                await saveProgress()
+            }
+        }
+    } catch (err) {
+        console.error('Erreur retour:', err)
     }
 }
 
@@ -105,59 +121,16 @@ function dismissError() {
 
 async function saveProgress() {
     try {
-        // Sauvegarde locale
         const progressData = {
             story_id: props.storyId,
             chapter_id: chapter.value.id,
-            choices_made: history.value.map(h => h.choiceId),
+            chapters_history: history.value, // Sauvegarder l'historique complet
             timestamp: Date.now()
         };
         
-        // Sauvegarder dans localStorage
         storageService.saveProgress(progressData);
-
-        // Tenter la sauvegarde backend
-        try {
-            const response = await fetch('/api/v1/progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify(progressData)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to save progress');
-            }
-
-            // Notification de succès
-            emit('show-notification', {
-                message: 'Progression sauvegardée',
-                type: 'success',
-                timeout: 3000
-            });
-        } catch (err) {
-            console.warn('Backend save failed, using local storage only:', err);
-            emit('show-notification', {
-                message: 'Progression sauvegardée localement',
-                type: 'warning',
-                timeout: 3000
-            });
-        }
     } catch (err) {
-        console.error('Failed to save progress:', err);
-        error.value = "Erreur lors de la sauvegarde de la progression";
-        emit('show-notification', {
-            message: 'Erreur lors de la sauvegarde',
-            type: 'error',
-            timeout: 5000
-        });
+        console.error('Pb de sauvegarde:', err);
     }
 }
 
@@ -169,29 +142,27 @@ async function loadSavedProgress() {
             loading.value = true;
             const { fetchJson } = useFetchJson();
             
-            // Charger le chapitre sauvegardé
-            const chapterData = await fetchJson(`/api/v1/chapters/${savedProgress.chapter_id}`);
+            // Récupérer l'historique sauvegardé
+            history.value = savedProgress.chapters_history || [];
+            
+            // Charger le chapitre actuel
+            const currentChapterId = savedProgress.chapter_id;
+            const chapterData = await fetchJson(`/api/v1/chapters/${currentChapterId}`);
             
             if (chapterData) {
                 chapter.value = chapterData;
                 choices.value = chapterData.choices || [];
-                // Restaurer l'historique
-                history.value = savedProgress.choices_made.map(choiceId => ({
-                    choiceId,
-                    // Vous pouvez ajouter plus d'informations si nécessaire
-                }));
                 updateProgress();
             }
+            
         } catch (err) {
             console.error('Error loading saved progress:', err);
-            // Si échec du chargement, on commence une nouvelle partie
-            loadFirstChapter();
+            await loadFirstChapter();
         } finally {
             loading.value = false;
         }
     } else {
-        // Pas de sauvegarde trouvée, on commence une nouvelle partie
-        loadFirstChapter();
+        await loadFirstChapter();
     }
 }
 
@@ -200,13 +171,29 @@ onMounted(async () => {
     await loadSavedProgress();
 });
 
-function resetProgress() {
+async function resetProgress() {
     if (confirm('Êtes-vous sûr de vouloir recommencer ? Toute progression sera perdue.')) {
-        storageService.clearProgress();
+        // Réinitialiser complètement l'historique et le localStorage
+        storageService.clearProgress(props.storyId);
         history.value = [];
-        loadFirstChapter();
-        updateProgress();
+        chapter.value = null;
+        choices.value = [];
+        progress.value = 0;
+        
+        // Recharger le premier chapitre
+        await loadFirstChapter();
+        
+        // Notification de réinitialisation
+        emit('show-notification', {
+            message: 'Histoire réinitialisée',
+            type: 'info',
+            timeout: 3000
+        });
     }
+}
+
+function confirmQuit() {
+    emit('return-to-dashboard')
 }
 </script>
 
@@ -228,10 +215,11 @@ function resetProgress() {
         <!-- Boutons de navigation -->
         <div class="flex justify-between items-center mb-4">
             <button @click="goBack" 
-                    :disabled="!history.length"
+                    :disabled="!history.length || chapter?.chapter_number === 1"
                     :class="['px-4 py-2 rounded-lg transition-colors',
-                            history.length ? 'bg-dating-primary text-white hover:bg-dating-primary/90' 
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed']">
+                            (!history.length || chapter?.chapter_number === 1) 
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                : 'bg-dating-primary text-white hover:bg-dating-primary/90']">
                 ← Retour
             </button>
             
@@ -240,7 +228,7 @@ function resetProgress() {
                 Recommencer
             </button>
             
-            <button @click="$emit('return-to-dashboard')"
+            <button @click="confirmQuit"
                     class="px-4 py-2 bg-dating-primary text-white rounded-lg hover:bg-dating-primary/90">
                 Quitter l'histoire
             </button>

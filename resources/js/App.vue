@@ -4,6 +4,7 @@ import { useFetchJson } from '@/composables/useFetchJson';
 import TheHeader from '@/components/TheHeader.vue'
 import Home from '@/pages/Home.vue'
 import ChapterView from '@/pages/ChapterView.vue'
+import NotificationToast from './components/NotificationToast.vue';
 
 // State
 const user = ref({ name: "Guest" });
@@ -12,6 +13,7 @@ const currentView = ref("dashboard");
 const chapterId = ref(null);
 const dateScenarios = ref([]);
 const error = ref(null);
+const notifications = ref([]);
 
 // Load initial data
 onMounted(async () => {
@@ -22,9 +24,9 @@ onMounted(async () => {
         const { fetchJson } = useFetchJson();
         const stories = await fetchJson('/api/v1/stories');
         
-        console.log('Stories data:', stories)  // Modification ici : utiliser stories au lieu de result
+        console.log('Stories data:', stories)  
         
-        if (stories) {  // Modification ici : vérifier stories directement
+        if (stories) {  
             dateScenarios.value = stories.map(story => ({
                 id: story.id,
                 title: story.title,
@@ -65,10 +67,46 @@ function retryOperation() {
 function isStoryAvailable(story) {
   return story && story.id;
 }
+
+// Notifications
+function showNotification(notification) {
+    const id = Date.now()
+    notifications.value.push({
+        id,
+        ...notification
+    })
+
+    if (notification.timeout !== 0) {
+        setTimeout(() => {
+            removeNotification(id)
+        }, notification.timeout || 3000)
+    }
+}
+
+function removeNotification(id) {
+    notifications.value = notifications.value.filter(n => n.id !== id)
+}
+
+function handleNotification({ message, type = 'info', timeout = 3000 }) {
+    showNotification({ message, type, timeout })
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-gradient-to-b from-pink-50 to-white">
+    <!-- Notifications -->
+    <TransitionGroup 
+        name="notification"
+        tag="div"
+        class="fixed top-4 right-4 z-50 space-y-2">
+        <NotificationToast
+            v-for="notification in notifications"
+            :key="notification.id"
+            v-bind="notification"
+            @close="removeNotification(notification.id)"
+        />
+    </TransitionGroup>
+
     <!-- Notification d'erreur -->
     <transition name="fade">
       <div v-if="error" 
@@ -177,6 +215,7 @@ function isStoryAvailable(story) {
             v-if="currentView === 'date-simulator'"
             :storyId="chapterId"
             @return-to-dashboard="returnToDashboard"
+            @show-notification="handleNotification"
         />
     </main>
   </div>
@@ -193,6 +232,21 @@ function isStoryAvailable(story) {
   opacity: 0;
 }
 
+.notification-enter-active,
+.notification-leave-active {
+    transition: all 0.3s ease;
+}
+
+.notification-enter-from {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.notification-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
 :root {
     --primary: #ff6b6b;
     --primary-light: #ff8787;
@@ -206,7 +260,7 @@ function isStoryAvailable(story) {
     --border-color: #ffe3e3;
 }
 
-/* Rest of your styles with the same structure but updated classes */
+
 .dating-app {
     min-height: 100vh;
     background-color: var(--bg-light);
@@ -237,5 +291,5 @@ function isStoryAvailable(story) {
     transform: translateY(-5px);
 }
 
-/* Add more of your custom styles here */
+
 </style>
