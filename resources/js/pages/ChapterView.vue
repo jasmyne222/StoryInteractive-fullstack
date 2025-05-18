@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue';
+import { storageService } from '../services/storageService';
 import { useFetchJson } from '../composables/useFetchJson'
 import ErrorHandler from '../components/ErrorHandler.vue'
 
@@ -62,13 +63,14 @@ async function makeChoice(choice) {
         loading.value = true
         const { fetchJson } = useFetchJson()
         
-        // Correction ici aussi : ajouter /api/ au début de l'URL
         const chapterData = await fetchJson(`/api/v1/chapters/${choice.next_chapter_id}`)
         
         if (chapterData) {
             chapter.value = chapterData
             choices.value = chapterData.choices || []
             updateProgress()
+            // Sauvegarder la progression après chaque choix
+            await saveProgress()
         }
     } catch (err) {
         error.value = "Erreur lors du chargement du prochain chapitre"
@@ -103,35 +105,107 @@ function dismissError() {
 
 async function saveProgress() {
     try {
-        const response = await fetch('/api/v1/progress', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({
-                story_id: props.storyId,
-                chapter_id: chapter.value.id,
-                choices_made: history.value.map(choice => choice.choiceId),
-            }),
-        });
+        // Sauvegarde locale
+        const progressData = {
+            story_id: props.storyId,
+            chapter_id: chapter.value.id,
+            choices_made: history.value.map(h => h.choiceId),
+            timestamp: Date.now()
+        };
+        
+        // Sauvegarder dans localStorage
+        storageService.saveProgress(progressData);
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                // Rediriger vers la page de connexion si non authentifié
-                window.location.href = '/login';
-                return;
+        // Tenter la sauvegarde backend
+        try {
+            const response = await fetch('/api/v1/progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                },
+                body: JSON.stringify(progressData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
 
-        const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.message || 'Failed to save progress');
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save progress');
+            }
+
+            // Notification de succès
+            emit('show-notification', {
+                message: 'Progression sauvegardée',
+                type: 'success',
+                timeout: 3000
+            });
+        } catch (err) {
+            console.warn('Backend save failed, using local storage only:', err);
+            emit('show-notification', {
+                message: 'Progression sauvegardée localement',
+                type: 'warning',
+                timeout: 3000
+            });
         }
     } catch (err) {
         console.error('Failed to save progress:', err);
         error.value = "Erreur lors de la sauvegarde de la progression";
+        emit('show-notification', {
+            message: 'Erreur lors de la sauvegarde',
+            type: 'error',
+            timeout: 5000
+        });
+    }
+}
+
+// Ajout d'une fonction pour charger la progression
+async function loadSavedProgress() {
+    const savedProgress = storageService.loadProgress(props.storyId);
+    if (savedProgress) {
+        try {
+            loading.value = true;
+            const { fetchJson } = useFetchJson();
+            
+            // Charger le chapitre sauvegardé
+            const chapterData = await fetchJson(`/api/v1/chapters/${savedProgress.chapter_id}`);
+            
+            if (chapterData) {
+                chapter.value = chapterData;
+                choices.value = chapterData.choices || [];
+                // Restaurer l'historique
+                history.value = savedProgress.choices_made.map(choiceId => ({
+                    choiceId,
+                    // Vous pouvez ajouter plus d'informations si nécessaire
+                }));
+                updateProgress();
+            }
+        } catch (err) {
+            console.error('Error loading saved progress:', err);
+            // Si échec du chargement, on commence une nouvelle partie
+            loadFirstChapter();
+        } finally {
+            loading.value = false;
+        }
+    } else {
+        // Pas de sauvegarde trouvée, on commence une nouvelle partie
+        loadFirstChapter();
+    }
+}
+
+// Charger la progression au montage du composant
+onMounted(async () => {
+    await loadSavedProgress();
+});
+
+function resetProgress() {
+    if (confirm('Êtes-vous sûr de vouloir recommencer ? Toute progression sera perdue.')) {
+        storageService.clearProgress();
+        history.value = [];
+        loadFirstChapter();
+        updateProgress();
     }
 }
 </script>
@@ -159,6 +233,11 @@ async function saveProgress() {
                             history.length ? 'bg-dating-primary text-white hover:bg-dating-primary/90' 
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed']">
                 ← Retour
+            </button>
+            
+            <button @click="resetProgress"
+                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                Recommencer
             </button>
             
             <button @click="$emit('return-to-dashboard')"
